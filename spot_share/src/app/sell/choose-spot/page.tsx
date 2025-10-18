@@ -1,5 +1,7 @@
+"use client";
 import { useState } from "react";
-import { MapPin, Edit3, Check, ChevronLeft } from "lucide-react";
+import { MapPin, Edit3, Check } from "lucide-react";
+import Modal from "@/components/items/Modal";
 
 // Theme tokens inspired by the screenshot
 const theme = {
@@ -9,11 +11,12 @@ const theme = {
 };
 
 export default function ChooseSpot() {
-  const [address] = useState("1234 Ocean Ave, Santa Monica, CA 90401");
+  const [address] = useState("Hannon Parking lot, LMU");
   const [coords] = useState({ lat: 34.0107, lng: -118.492 });
+  const [openSellConfirmation, setOpenSellConfirmation] = useState(false);
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-white">
+    <div className="min-h-screen w-full flex flex-col bg-white pt-16 md:pt-20 ">
       {/* Hero question bar */}
       <section className="w-full border-b border-slate-200/60 bg-[rgba(242,247,255,0.8)]">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6">
@@ -110,13 +113,37 @@ export default function ChooseSpot() {
               <button className="w-full sm:w-auto rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 Not this spot
               </button>
-              <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brandPurple,#8B5CF6)] px-5 py-3 text-sm font-semibold text-white shadow-md hover:brightness-[0.95]">
+              <button
+                onClick={() => setOpenSellConfirmation(true)}
+                className="w-full sm:w-auto inline-flex hover:cursor-pointer items-center justify-center gap-2 rounded-xl bg-[var(--brandPurple,#8B5CF6)] px-5 py-3 text-sm font-semibold text-white shadow-md hover:brightness-[0.95]"
+              >
                 <Check className="h-5 w-5" /> Confirm this spot
               </button>
             </div>
           </div>
         </div>
       </div>
+      <SellConfirmationModal
+        open={openSellConfirmation}
+        onClose={() => setOpenSellConfirmation(false)}
+      />
     </div>
   );
 }
+
+type ModalProps = { open: boolean; onClose: () => void };
+const SellConfirmationModal: React.FC<ModalProps> = ({
+  open,
+  onClose,
+}: ModalProps) => {
+  return (
+    <Modal open={open} onClose={onClose} title="Confirm your spot">
+      <div className="p-4">
+        <h2 className="text-lg font-semibold mb-2">Spot details</h2>
+        <p className="mb-2">
+          <span className="font-semibold">Name:</span>
+        </p>
+      </div>
+    </Modal>
+  );
+};

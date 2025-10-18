@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import {
   login,
   logout,
@@ -12,7 +13,9 @@ export function Navbar() {
 
   return (
     <nav className="flex items-center justify-between gap-4 p-4 bg-white shadow-md fixed top-0 left-0 w-full z-50">
-      <div className="text-2xl font-bold text-blue-600">Spot Share</div>
+      <Link href="/">
+        <div className="text-2xl font-bold text-blue-600">Spot Share</div>
+      </Link>
 
       <div className="flex-1 max-w-xl mx-4">
         <label htmlFor="search" className="sr-only">
