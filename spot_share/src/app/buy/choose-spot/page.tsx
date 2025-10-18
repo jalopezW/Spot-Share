@@ -63,23 +63,6 @@ function BookingModal({
   const hourlyRate = parseFloat(spot.price.replace("$", "").replace("/hr", ""));
   const totalPrice = hourlyRate * hours;
 
-  // Close modal on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-    
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen, onClose]);
-
   const handleCheckout = async () => {
     setIsProcessing(true);
     try {
@@ -118,14 +101,14 @@ function BookingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
+      {/* Light Backdrop - semi-transparent white instead of dark */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        className="absolute inset-0 bg-white/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal Content */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto border-2 border-gray-200">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -244,7 +227,7 @@ function BookingModal({
 
           {/* Info Note */}
           <p className="text-xs text-gray-500 text-center mt-4">
-            You'll be redirected to a secure payment page
+            You'll be redirected to Stripe's secure payment page
           </p>
         </div>
       </div>
@@ -387,4 +370,4 @@ export default function ChooseSpotPage() {
       </div>
     </div>
   );
-};
+}

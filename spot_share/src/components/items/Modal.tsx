@@ -17,9 +17,10 @@ type ModalProps = {
   onClose: () => void;
   title?: string;
   children?: React.ReactNode;
+  className?: string;
 };
 
-function Modal({ open, onClose, title, children }: ModalProps) {
+function Modal({ open, onClose, title, children, className }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
   const [animate, setAnimate] = useState(false);
@@ -86,6 +87,7 @@ function Modal({ open, onClose, title, children }: ModalProps) {
           "bg-white text-zinc-900 dark:bg-gray-200 dark:text-zinc-900",
           // Sizing: most of the screen, small rim visible
           "m-3 w-[94vw] h-[92vh] md:w-[92vw] md:h-[88vh] max-w-[1400px]",
+          className,
           // Enter animation
           "transform transition-all duration-200 ease-out",
           animate
