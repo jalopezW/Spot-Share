@@ -9,18 +9,21 @@ import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 const MapSection = () => {
   // Load API key from environment variable
   const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
-  
+
   // Initial map center coordinates LMU
   const [center] = useState({ lat: 33.9687, lng: -118.4189 });
-  
+
   // Map zoom level (1-20, higher = more zoomed in)
   const [zoom] = useState(17);
-  
+
   // Store marked locations
   const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
-  
+
   // Store the last clicked coordinates
-  const [lastClickedCoords, setLastClickedCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [lastClickedCoords, setLastClickedCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   // Map container styling
   const mapContainerStyle = {
@@ -42,16 +45,16 @@ const MapSection = () => {
     if (event.latLng) {
       const lat = event.latLng.lat();
       const lng = event.latLng.lng();
-      
+
       // Add new marker
       setMarkers((current) => [...current, { lat, lng }]);
-      
+
       // Store coordinates for use in other pages
       setLastClickedCoords({ lat, lng });
-      
+
       // Log coordinates (you can save these to localStorage, state management, or database)
       console.log("Marked location:", { lat, lng });
-      
+
       // Example: Save to localStorage for use on other pages
       localStorage.setItem("lastMarkedLocation", JSON.stringify({ lat, lng }));
     }
@@ -76,12 +79,11 @@ const MapSection = () => {
           ))}
         </GoogleMap>
       </LoadScript>
-      
+
       {/* Dark overlay for better text contrast */}
       <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-      
+
       {/* Center content overlay */}
-      
     </div>
   );
 };
@@ -123,8 +125,6 @@ export default function Home() {
   );
 }
 
-
-
 // <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
 //         <div className="text-center bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl">
 //           <MapPin className="w-24 h-24 text-blue-600 mx-auto mb-4" />
@@ -134,7 +134,7 @@ export default function Home() {
 //           <p className="text-gray-600 text-lg">
 //             Click on the map to mark parking locations
 //           </p>
-          
+
 //           {/* Show last clicked coordinates */}
 //           {lastClickedCoords && (
 //             <div className="mt-4 text-sm text-gray-600 bg-white/80 p-3 rounded-lg">
