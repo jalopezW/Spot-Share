@@ -10,8 +10,11 @@ const MapSection = () => {
   // Load API key from environment variable
   const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
   
-  // Initial map center coordinates
-  const [center] = useState({ lat: 40.7128, lng: -74.0060 });
+  // Initial map center coordinates LMU
+  const [center] = useState({ lat: 33.9687, lng: -118.4189 });
+  
+  // Map zoom level (1-20, higher = more zoomed in)
+  const [zoom] = useState(17);
   
   // Store marked locations
   const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
@@ -27,7 +30,7 @@ const MapSection = () => {
 
   // Map options
   const mapOptions = {
-    zoom: 13,
+    zoom: zoom,
     disableDefaultUI: false,
     zoomControl: true,
     mapTypeControl: false,
