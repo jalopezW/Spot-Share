@@ -55,7 +55,7 @@ const FooterActions = () => {
           </Link>
 
           {/* Sell Button */}
-          <Link href="/buy/choose-spot">
+          <Link href="/sell/choose-spot">
             <button className="pointer-events-auto group relative bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-purple-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
               <span className="text-lg font-bold">Sell a Spot</span>
               <MapPin className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />

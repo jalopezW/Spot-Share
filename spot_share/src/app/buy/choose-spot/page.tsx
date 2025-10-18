@@ -1,39 +1,7 @@
 import React from "react";
 import { MapPin, DollarSign, Star, Navigation } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
 
-/**
- * NAVBAR COMPONENT
- * Simple top navigation bar that displays the Spot Share logo
- * Fixed to the top of the page with white background and shadow
- */
-function Navbar() {
-  return (
-    <nav className="flex items-center justify-center p-4 bg-white shadow-md fixed top-0 left-0 w-full z-50">
-      <div className="text-2xl font-bold text-blue-600">Spot Share</div>
-    </nav>
-  );
-}
-
-/**
- * PARKING SPOTS DATA
- * Array of sample parking spots with their details
- * Includes: name, address, pricing, ratings, availability status, and coordinates
- * 
- * TO LOAD FROM EXTERNAL FILE:
- * Replace this array with data fetched from an API or imported from a JSON file
- * Example: const parkingSpots = await fetch('/api/parking-spots').then(r => r.json())
- * 
- * Required fields for each spot:
- * - id: unique identifier
- * - name: spot name
- * - address: street address
- * - price: pricing information
- * - rating: user rating (0-5)
- * - distance: distance from user
- * - available: boolean availability status
- * - lat: latitude coordinate (required for map pin positioning)
- * - lng: longitude coordinate (required for map pin positioning)
- */
 const parkingSpots = [
   {
     id: 1,
@@ -44,7 +12,7 @@ const parkingSpots = [
     distance: "0.3 mi",
     available: true,
     lat: 40.7128,
-    lng: -74.0060,
+    lng: -74.006,
   },
   {
     id: 2,
@@ -55,7 +23,7 @@ const parkingSpots = [
     distance: "0.5 mi",
     available: true,
     lat: 40.7148,
-    lng: -74.0080,
+    lng: -74.008,
   },
   {
     id: 3,
@@ -66,7 +34,7 @@ const parkingSpots = [
     distance: "0.7 mi",
     available: false,
     lat: 40.7108,
-    lng: -74.0040,
+    lng: -74.004,
   },
 ];
 
@@ -76,7 +44,7 @@ const parkingSpots = [
  * Shows: spot name, availability badge, address, price, distance, rating, and booking button
  * Appears in the sidebar list on the right side of the page
  */
-function ParkingSpotCard({ spot }: { spot: typeof parkingSpots[0] }) {
+function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
   return (
     <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
       {/* Card Header: Spot name and availability badge */}
@@ -136,18 +104,26 @@ function ParkingSpotCard({ spot }: { spot: typeof parkingSpots[0] }) {
  * Individual map pin that marks a parking spot location
  * Positioned using latitude and longitude coordinates
  * Can be dynamically generated based on data from external sources
- * 
+ *
  * Props:
  * - lat: latitude coordinate of the parking spot
- * - lng: longitude coordinate of the parking spot  
+ * - lng: longitude coordinate of the parking spot
  * - name: name of the parking spot (shown on hover)
  */
-function ParkingPin({ lat, lng, name }: { lat: number; lng: number; name: string }) {
+function ParkingPin({
+  lat,
+  lng,
+  name,
+}: {
+  lat: number;
+  lng: number;
+  name: string;
+}) {
   // maps center cords and zoom (change to hannon lat, long)
   const centerLat = 40.7128;
-  const centerLng = -74.0060;
+  const centerLng = -74.006;
   const scale = 50000; // Adjust this to zoom in/out on the map
-  
+
   // Calculate pixel position relative to center
   const x = 400 + (lng - centerLng) * scale;
   const y = 300 - (lat - centerLat) * scale; // Y is inverted (up is negative)
@@ -314,19 +290,19 @@ function StaticMap() {
 export default function ChooseSpotPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top navigation bar */}
-      <Navbar />
-
       {/* Main content area with map and sidebar */}
       <div className="pt-20 h-screen flex">
         {/* LEFT SIDE: Interactive map showing parking locations - takes 60% of screen width */}
         <div className="w-3/5 h-full relative">
           {/* Base map layer - roads and background */}
           <StaticMap />
-          
+
           {/* Parking pins overlay layer - dynamically generated from data */}
           {/* This SVG overlay sits on top of the map and renders pins based on lat/lng coordinates */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 800 600">
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 800 600"
+          >
             {parkingSpots.map((spot) => (
               <ParkingPin
                 key={spot.id}
@@ -364,4 +340,3 @@ export default function ChooseSpotPage() {
     </div>
   );
 }
-
