@@ -1,39 +1,48 @@
-import React from "react";
-import { MapPin, DollarSign, Star, Navigation } from "lucide-react";
+"use client";
 
+import React, { useState } from "react";
+import { MapPin, DollarSign, Star, Navigation } from "lucide-react";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+
+/**
+ * PARKING SPOTS DATA
+ * Sample parking spots near LMU campus
+ * Markers are dynamically generated from this data
+ * Replace with data from your database/API later
+ */
 const parkingSpots = [
   {
     id: 1,
-    name: "Downtown Garage",
-    address: "123 Main St",
+    name: "LMU Parking Structure A",
+    address: "1 LMU Drive",
     price: "$5/hr",
     rating: 4.5,
-    distance: "0.3 mi",
+    distance: "0.1 mi",
     available: true,
-    lat: 40.7128,
-    lng: -74.006,
+    lat: 33.967133,
+    lng: -118.417822,
   },
   {
     id: 2,
-    name: "City Center Parking",
-    address: "457 Park Ave",
+    name: "Campus Center Lot",
+    address: "1 Loyola Marymount University Dr",
     price: "$8/hr",
     rating: 4.8,
-    distance: "0.5 mi",
+    distance: "0.2 mi",
     available: true,
-    lat: 40.7148,
-    lng: -74.008,
+    lat: 33.9680,
+    lng: -118.4180,
   },
   {
     id: 3,
-    name: "Metro Lot",
-    address: "789 Broadway",
+    name: "Bluff Parking",
+    address: "Del Rey Hills Dr",
     price: "$6/hr",
     rating: 4.2,
-    distance: "0.7 mi",
+    distance: "0.3 mi",
     available: false,
-    lat: 40.7108,
-    lng: -74.004,
+    lat: 33.9670,
+    lng: -118.4200,
   },
 ];
 
@@ -119,8 +128,8 @@ function ParkingPin({
   name: string;
 }) {
   // maps center cords and zoom (change to hannon lat, long)
-  const centerLat = 40.7128;
-  const centerLng = -74.006;
+  const centerLat = 33.966787; 
+  const centerLng = -118.417631;
   const scale = 50000; // Adjust this to zoom in/out on the map
 
   // Calculate pixel position relative to center
@@ -144,139 +153,57 @@ function ParkingPin({
 }
 
 /**
- * STATIC MAP COMPONENT
- * Custom SVG-based map background with road network
- * No external map API required - completely self-contained
- * Shows: grid pattern background, road network, and animated user location
- * Parking pins are rendered separately as overlay components
+ * INTERACTIVE GOOGLE MAP COMPONENT
+ * Real Google Maps showing parking spot locations with dynamic markers
+ * Markers are generated from parkingSpots data and color-coded by availability
+ * Centered on LMU campus area
  */
-function StaticMap() {
+function InteractiveMap() {
+  // Load API key from environment variable
+  const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
+  
+  // Map center - LMU campus area
+  const center = { lat: 33.966787, lng: -118.417631 };
+
+  const [zoom] = useState(19);
+  
+  // Map container styling
+  const mapContainerStyle = {
+    width: "100%",
+    height: "100%",
+  };
+
+  // Map options
+  const mapOptions = {
+    zoom: zoom,
+    disableDefaultUI: false,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+  };
+
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-blue-50 via-green-50 to-blue-50 overflow-hidden">
-      {/* Grid pattern background for map texture */}
-      <div className="absolute inset-0 opacity-10">
-        <svg width="100%" height="100%">
-          <pattern
-            id="grid"
-            x="0"
-            y="0"
-            width="40"
-            height="40"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 40 0 L 0 0 0 40"
-              fill="none"
-              stroke="gray"
-              strokeWidth="1"
-            />
-          </pattern>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-      </div>
-
-      {/* Main map SVG with roads and markers */}
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 800 600">
-        {/* Road network - horizontal and vertical streets */}
-        {/* Main horizontal road (center) */}
-        <line
-          x1="0"
-          y1="300"
-          x2="800"
-          y2="300"
-          stroke="#94a3b8"
-          strokeWidth="8"
-        />
-        {/* Main vertical road (center) */}
-        <line
-          x1="400"
-          y1="0"
-          x2="400"
-          y2="600"
-          stroke="#94a3b8"
-          strokeWidth="8"
-        />
-        {/* Secondary roads */}
-        <line
-          x1="200"
-          y1="0"
-          x2="200"
-          y2="600"
-          stroke="#cbd5e1"
-          strokeWidth="6"
-        />
-        <line
-          x1="600"
-          y1="0"
-          x2="600"
-          y2="600"
-          stroke="#cbd5e1"
-          strokeWidth="6"
-        />
-        <line
-          x1="0"
-          y1="150"
-          x2="800"
-          y2="150"
-          stroke="#cbd5e1"
-          strokeWidth="6"
-        />
-        <line
-          x1="0"
-          y1="450"
-          x2="800"
-          y2="450"
-          stroke="#cbd5e1"
-          strokeWidth="6"
-        />
-
-        {/* USER'S CURRENT LOCATION MARKER */}
-        {/* Animated pulsing blue circle at the center of the map */}
-        {/* Shows where the user currently is on the map */}
-        <g transform="translate(400, 300)">
-          {/* Pulsing outer ring animation */}
-          <circle cx="0" cy="0" r="25" fill="#3b82f6" opacity="0.2">
-            <animate
-              attributeName="r"
-              from="25"
-              to="35"
-              dur="2s"
-              repeatCount="indefinite"
-            />
-            <animate
-              attributeName="opacity"
-              from="0.2"
-              to="0"
-              dur="2s"
-              repeatCount="indefinite"
-            />
-          </circle>
-          {/* Main location dot */}
-          <circle cx="0" cy="0" r="10" fill="#3b82f6" />
-          {/* White center dot for contrast */}
-          <circle cx="0" cy="0" r="4" fill="white" />
-        </g>
-      </svg>
-
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3">
-        <div className="flex flex-col gap-2 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-            <span className="text-gray-700 font-medium">Your Location</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <svg width="12" height="16" viewBox="0 0 30 40" className="mt-0.5">
-              <path
-                d="M 15,5 C 10,5 5,9 5,15 C 5,20 15,35 15,35 C 15,35 25,20 25,15 C 25,9 20,5 15,5 Z"
-                fill="#3b82f6"
-              />
-            </svg>
-            <span className="text-gray-700 font-medium">Parking Spots</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={center}
+        options={mapOptions}
+      >
+        {/* Dynamically render markers for all parking spots from data */}
+        {parkingSpots.map((spot) => (
+          <Marker
+            key={spot.id}
+            position={{ lat: spot.lat, lng: spot.lng }}
+            title={`${spot.name} - ${spot.price}`}
+            icon={{
+              url: spot.available 
+                ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Available = green
+                : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",   // Occupied = red
+            }}
+          />
+        ))}
+      </GoogleMap>
+    </LoadScript>
   );
 }
 
@@ -292,25 +219,9 @@ export default function ChooseSpotPage() {
       {/* Main content area with map and sidebar */}
       <div className="pt-20 h-screen flex">
         {/* LEFT SIDE: Interactive map showing parking locations - takes 60% of screen width */}
-        <div className="w-3/5 h-full relative">
-          {/* Base map layer - roads and background */}
-          <StaticMap />
-
-          {/* Parking pins overlay layer - dynamically generated from data */}
-          {/* This SVG overlay sits on top of the map and renders pins based on lat/lng coordinates */}
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox="0 0 800 600"
-          >
-            {parkingSpots.map((spot) => (
-              <ParkingPin
-                key={spot.id}
-                lat={spot.lat}
-                lng={spot.lng}
-                name={spot.name}
-              />
-            ))}
-          </svg>
+        <div className="w-3/5 h-full">
+          {/* Google Maps with dynamic markers from parkingSpots data */}
+          <InteractiveMap />
         </div>
 
         {/* RIGHT SIDE: Scrollable list of parking spots - takes 40% of screen width */}
