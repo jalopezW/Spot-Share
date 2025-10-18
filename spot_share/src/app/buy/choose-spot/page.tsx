@@ -1,6 +1,5 @@
 import React from "react";
 import { MapPin, DollarSign, Star, Navigation } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
 
 const parkingSpots = [
   {
@@ -17,7 +16,7 @@ const parkingSpots = [
   {
     id: 2,
     name: "City Center Parking",
-    address: "456 Park Ave",
+    address: "457 Park Ave",
     price: "$8/hr",
     rating: 4.8,
     distance: "0.5 mi",

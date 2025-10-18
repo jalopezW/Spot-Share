@@ -1,41 +1,84 @@
-import React from "react";
-import { Search, MapPin, DollarSign } from "lucide-react";
-import Link from "next/link";
+"use client";
 
-// Map Section Component
+import React, { useState, useCallback } from "react";
+import { MapPin, DollarSign } from "lucide-react";
+import Link from "next/link";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+
+// Map Section Component with Interactive Marking
 const MapSection = () => {
-  const mapUrl =
-    "https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=13&size=1200x600&maptype=roadmap&markers=color:red%7C40.7128,-74.0060&key=YOUR_API_KEY";
+  // Load API key from environment variable
+  const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
+  
+  // Initial map center coordinates
+  const [center] = useState({ lat: 40.7128, lng: -74.0060 });
+  
+  // Store marked locations
+  const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
+  
+  // Store the last clicked coordinates
+  const [lastClickedCoords, setLastClickedCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Map container styling
+  const mapContainerStyle = {
+    width: "100%",
+    height: "100vh",
+  };
+
+  // Map options
+  const mapOptions = {
+    zoom: 13,
+    disableDefaultUI: false,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+  };
+
+  // Handle map click to add marker
+  const onMapClick = useCallback((event: google.maps.MapMouseEvent) => {
+    if (event.latLng) {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      
+      // Add new marker
+      setMarkers((current) => [...current, { lat, lng }]);
+      
+      // Store coordinates for use in other pages
+      setLastClickedCoords({ lat, lng });
+      
+      // Log coordinates (you can save these to localStorage, state management, or database)
+      console.log("Marked location:", { lat, lng });
+      
+      // Example: Save to localStorage for use on other pages
+      localStorage.setItem("lastMarkedLocation", JSON.stringify({ lat, lng }));
+    }
+  }, []);
 
   return (
-    <div className="pt-16 md:pt-20 h-screen">
-      <div className="relative w-full h-full bg-gray-200">
-        {/* Map Placeholder */}
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-50">
-          <div className="text-center">
-            <MapPin className="w-24 h-24 text-blue-600 mx-auto mb-4 animate-bounce" />
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              Find Your Perfect Spot
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Search and book parking spaces near you
-            </p>
-          </div>
-        </div>
-
-        {/* Optional: Overlay with map styling */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-red-500 rounded-full shadow-lg animate-pulse"></div>
-          <div
-            className="absolute top-1/3 right-1/3 w-3 h-3 bg-red-500 rounded-full shadow-lg animate-pulse"
-            style={{ animationDelay: "0.5s" }}
-          ></div>
-          <div
-            className="absolute bottom-1/3 left-1/2 w-3 h-3 bg-red-500 rounded-full shadow-lg animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-        </div>
-      </div>
+    <div className="h-screen relative">
+      {/* Interactive Google Map */}
+      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={center}
+          options={mapOptions}
+          onClick={onMapClick}
+        >
+          {/* Render all markers */}
+          {markers.map((marker, index) => (
+            <Marker
+              key={index}
+              position={{ lat: marker.lat, lng: marker.lng }}
+            />
+          ))}
+        </GoogleMap>
+      </LoadScript>
+      
+      {/* Dark overlay for better text contrast */}
+      <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+      
+      {/* Center content overlay */}
+      
     </div>
   );
 };
@@ -76,3 +119,26 @@ export default function Home() {
     </main>
   );
 }
+
+
+
+// <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+//         <div className="text-center bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl">
+//           <MapPin className="w-24 h-24 text-blue-600 mx-auto mb-4" />
+//           <h2 className="text-3xl font-bold text-gray-800 mb-2">
+//             Find Your Perfect Spot
+//           </h2>
+//           <p className="text-gray-600 text-lg">
+//             Click on the map to mark parking locations
+//           </p>
+          
+//           {/* Show last clicked coordinates */}
+//           {lastClickedCoords && (
+//             <div className="mt-4 text-sm text-gray-600 bg-white/80 p-3 rounded-lg">
+//               <p className="font-semibold">Last Marked Location:</p>
+//               <p>Lat: {lastClickedCoords.lat.toFixed(6)}</p>
+//               <p>Lng: {lastClickedCoords.lng.toFixed(6)}</p>
+//             </div>
+//           )}
+//         </div>
+//       </div>
