@@ -15,13 +15,3 @@ export function loggedInUserDisplayName() {
     return auth.currentUser.displayName;
   }
 }
-
-// export function useAuthentication() {
-//   const [user, setUser] = useState(null);
-//   useEffect(() => {
-//     return auth.onAuthStateChanged((user) => {
-//       user ? setUser(user) : setUser(null);
-//     });
-//   }, []);
-//   return user;
-// }

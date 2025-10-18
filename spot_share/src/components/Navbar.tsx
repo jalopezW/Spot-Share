@@ -1,3 +1,6 @@
+"use client";
+import { login, logout } from "../../authService";
+
 // Navbar Component
 export function Navbar() {
   return (
@@ -18,7 +21,10 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="px-4 py-2 text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition">
+        <button
+          className="px-4 py-2 text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition"
+          onClick={() => login()}
+        >
           Login
         </button>
         <button className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition">
