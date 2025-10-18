@@ -1,8 +1,15 @@
 "use client";
-import { login, logout } from "../../authService";
+import {
+  login,
+  logout,
+  loggedInUserDisplayName,
+  useAuthentication,
+} from "../../authService";
 
 // Navbar Component
 export function Navbar() {
+  const user = useAuthentication();
+
   return (
     <nav className="flex items-center justify-between gap-4 p-4 bg-white shadow-md fixed top-0 left-0 w-full z-50">
       <div className="text-2xl font-bold text-blue-600">Spot Share</div>
@@ -19,18 +26,28 @@ export function Navbar() {
           aria-label="Search parking spots"
         />
       </div>
-
-      <div className="flex items-center gap-3">
-        <button
-          className="px-4 py-2 text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition"
-          onClick={() => login()}
-        >
-          Login
-        </button>
-        <button className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition">
-          Sign Up
-        </button>
-      </div>
+      {!user ? (
+        <div className="flex items-center gap-3">
+          <button
+            className="px-4 py-2 text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition"
+            onClick={() => login()}
+          >
+            Login
+          </button>
+          <button className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition">
+            Sign Up
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <button
+            className="px-4 py-2 text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition"
+            onClick={() => logout()}
+          >
+            Logout
+          </button>
+        </div>
+      )}
     </nav>
   );
 }
