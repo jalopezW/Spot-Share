@@ -1,36 +1,6 @@
 import React from "react";
 import { Search, MapPin, DollarSign } from "lucide-react";
-
-// Navbar Component
-export function Navbar() {
-  return (
-    <nav className="flex items-center justify-between gap-4 p-4 bg-white shadow-md fixed top-0 left-0 w-full z-50">
-      <div className="text-2xl font-bold text-blue-600">Spot Share</div>
-
-      <div className="flex-1 max-w-xl mx-4">
-        <label htmlFor="search" className="sr-only">
-          Search parking spots
-        </label>
-        <input
-          id="search"
-          type="search"
-          placeholder="Search for parking spots..."
-          className="w-full border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="Search parking spots"
-        />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <button className="px-4 py-2 text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition">
-          Login
-        </button>
-        <button className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition">
-          Sign Up
-        </button>
-      </div>
-    </nav>
-  );
-}
+import Link from "next/link";
 
 // Map Section Component
 const MapSection = () => {
@@ -77,16 +47,20 @@ const FooterActions = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
         <div className="flex justify-between items-end">
           {/* Buy Button */}
-          <button className="pointer-events-auto group relative bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
-            <DollarSign className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
-            <span className="text-lg font-bold">Buy a Spot</span>
-          </button>
+          <Link href="/buy/choose-spot">
+            <button className="pointer-events-auto group relative bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
+              <DollarSign className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+              <span className="text-lg font-bold">Buy a Spot</span>
+            </button>
+          </Link>
 
           {/* Sell Button */}
-          <button className="pointer-events-auto group relative bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-purple-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
-            <span className="text-lg font-bold">Sell a Spot</span>
-            <MapPin className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
-          </button>
+          <Link href="/buy/choose-spot">
+            <button className="pointer-events-auto group relative bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-purple-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
+              <span className="text-lg font-bold">Sell a Spot</span>
+              <MapPin className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+            </button>
+          </Link>
         </div>
       </div>
     </div>
@@ -97,7 +71,6 @@ const FooterActions = () => {
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
-      <Navbar />
       <MapSection />
       <FooterActions />
     </main>
