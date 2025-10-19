@@ -28,6 +28,6 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "firebaseConfig.js"
-, "src/app/api/checkout_sessions/route.tsx"  ],
+, "src/app/api/create-payment-intent/route.tsx"  ],
   "exclude": ["node_modules"]
 }

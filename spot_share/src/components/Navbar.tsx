@@ -92,7 +92,11 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }: ModalProps) => {
   const [color, setColor] = useState("");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
+  const [year, setYear] = useState<number | "">("");
   const [plate, setPlate] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
+  const [vehicleError, setVehicleError] = useState<string | null>(null);
 
   async function testLogin() {
     const userID = loggedInUserID();
@@ -105,6 +109,61 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }: ModalProps) => {
       }
     }
   }
+
+  async function checkModelExists(make: string, model: string, year: number) {
+    const url = `/api/model-exists?make=${encodeURIComponent(
+      make.trim()
+    )}&model=${encodeURIComponent(model.trim())}&year=${year}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Model check failed: ${res.status}`);
+    const data = await res.json();
+    return Boolean(data.exists);
+  }
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setVehicleError(null);
+
+      if (year === "" || Number.isNaN(Number(year))) {
+        setVehicleError("Please enter a valid model year.");
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        const exists = await checkModelExists(make, model, Number(year));
+        if (!exists) {
+          setVehicleError(
+            "That make/model/year combo wasn't found. Please double-check."
+          );
+          setSubmitting(false);
+          return;
+        }
+
+        await newUser({
+          first_name,
+          last_name,
+          color,
+          make,
+          model,
+          plate,
+          year: Number(year),
+        });
+
+        setSubmitting(false);
+        onClose();
+      } catch (err) {
+        console.error(err);
+        setVehicleError(
+          "We couldn't verify the vehicle right now. Please try again."
+        );
+        setSubmitting(false);
+      }
+    },
+    [first_name, last_name, color, make, model, plate, year, onClose]
+  );
+
   return (
     <Modal
       open={open}
@@ -114,20 +173,7 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }: ModalProps) => {
       }}
       title="Sign Up"
     >
-      <form
-        onSubmit={(e) => {
-          e.preventDefault(); // <-- Stop the page reload
-          newUser({
-            first_name,
-            last_name,
-            color,
-            make,
-            model,
-            plate,
-          });
-          onClose();
-        }}
-      >
+      <form onSubmit={handleSubmit}>
         <div className="p-4">
           <div>
             First Name:{" "}
@@ -174,14 +220,7 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }: ModalProps) => {
           <div>Payments: tf??</div>
 
           <button
-            disabled={
-              first_name == "" &&
-              last_name == "" &&
-              color == "" &&
-              make == "" &&
-              model == "" &&
-              plate == ""
-            }
+            disabled={submitting}
             type="submit"
             className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
           >
