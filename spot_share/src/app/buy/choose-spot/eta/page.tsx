@@ -107,6 +107,82 @@ export default function SellerEtaPage() {
         },
       });
 
+      // Add red double pulse overlay for seller/spot
+      class RedPulseOverlay extends window.google.maps.OverlayView {
+        position: google.maps.LatLng;
+        div: HTMLDivElement | null = null;
+
+        constructor(position: google.maps.LatLng) {
+          super();
+          this.position = position;
+        }
+
+        onAdd() {
+          const div = document.createElement('div');
+          div.style.position = 'absolute';
+          div.style.pointerEvents = 'none';
+          div.style.width = '0px';
+          div.style.height = '0px';
+          
+          // First pulse
+          const pulse1 = document.createElement('div');
+          pulse1.className = 'pulse-ring';
+          pulse1.style.position = 'absolute';
+          pulse1.style.left = '-7.5px';
+          pulse1.style.top = '-7.5px';
+          pulse1.style.width = '15px';
+          pulse1.style.height = '15px';
+          pulse1.style.borderRadius = '50%';
+          pulse1.style.background = '#E82A2A';
+          pulse1.style.opacity = '0.6';
+
+          // Second pulse with delay
+          const pulse2 = document.createElement('div');
+          pulse2.className = 'pulse-ring';
+          pulse2.style.position = 'absolute';
+          pulse2.style.left = '-7.5px';
+          pulse2.style.top = '-7.5px';
+          pulse2.style.width = '15px';
+          pulse2.style.height = '15px';
+          pulse2.style.borderRadius = '50%';
+          pulse2.style.background = '#E82A2A';
+          pulse2.style.opacity = '0.85';
+          pulse2.style.animationDelay = '0.2s';
+          
+          div.appendChild(pulse1);
+          div.appendChild(pulse2);
+          this.div = div;
+          
+          const panes = this.getPanes();
+          if (panes) {
+            panes.overlayMouseTarget.appendChild(div);
+          }
+        }
+
+        draw() {
+          if (!this.div) return;
+          
+          const overlayProjection = this.getProjection();
+          const position = overlayProjection.fromLatLngToDivPixel(this.position);
+          
+          if (position) {
+            this.div.style.left = position.x + 'px';
+            this.div.style.top = position.y + 'px';
+            this.div.style.transform = 'translate(-50%, -50%)';
+          }
+        }
+
+        onRemove() {
+          if (this.div && this.div.parentNode) {
+            this.div.parentNode.removeChild(this.div);
+            this.div = null;
+          }
+        }
+      }
+
+      const redPulseOverlay = new RedPulseOverlay(new window.google.maps.LatLng(sellerLocation.lat, sellerLocation.lng));
+      redPulseOverlay.setMap(map);
+
       // Buyer marker (blue - moving towards spot)
       new window.google.maps.Marker({
         position: buyerLocation,
@@ -121,6 +197,135 @@ export default function SellerEtaPage() {
           strokeWeight: 2,
         },
       });
+
+      // Add blue pulse overlay for buyer
+      class BluePulseOverlay extends window.google.maps.OverlayView {
+        position: google.maps.LatLng;
+        div: HTMLDivElement | null = null;
+
+        constructor(position: google.maps.LatLng) {
+          super();
+          this.position = position;
+        }
+
+        onAdd() {
+          const div = document.createElement('div');
+          div.style.position = 'absolute';
+          div.style.pointerEvents = 'none';
+          
+          const pulse = document.createElement('div');
+          pulse.className = 'pulse-ring';
+          pulse.style.width = '20px';
+          pulse.style.height = '20px';
+          pulse.style.borderRadius = '50%';
+          pulse.style.background = '#59A3FF';
+          pulse.style.opacity = '0.6';
+          
+          div.appendChild(pulse);
+          this.div = div;
+          
+          const panes = this.getPanes();
+          if (panes) {
+            panes.overlayMouseTarget.appendChild(div);
+          }
+        }
+
+        draw() {
+          if (!this.div) return;
+          
+          const overlayProjection = this.getProjection();
+          const position = overlayProjection.fromLatLngToDivPixel(this.position);
+          
+          if (position) {
+            this.div.style.left = position.x + 'px';
+            this.div.style.top = position.y + 'px';
+            this.div.style.transform = 'translate(-50%, -50%)';
+          }
+        }
+
+        onRemove() {
+          if (this.div && this.div.parentNode) {
+            this.div.parentNode.removeChild(this.div);
+            this.div = null;
+          }
+        }
+      }
+
+      const bluePulseOverlay = new BluePulseOverlay(new window.google.maps.LatLng(buyerLocation.lat, buyerLocation.lng));
+      bluePulseOverlay.setMap(map);
+
+      // Black (seller)marker with hardcoded coordinates
+      const blackMarkerLocation = { lat: 33.968700, lng: -118.418696 };
+      
+      new window.google.maps.Marker({
+        position: blackMarkerLocation,
+        map: map,
+        title: "Black Location",
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: "#000000",
+          fillOpacity: 1,
+          strokeColor: "#FFFFFF",
+          strokeWeight: 2,
+        },
+      });
+
+      // Add black pulse overlay
+      class BlackPulseOverlay extends window.google.maps.OverlayView {
+        position: google.maps.LatLng;
+        div: HTMLDivElement | null = null;
+
+        constructor(position: google.maps.LatLng) {
+          super();
+          this.position = position;
+        }
+
+        onAdd() {
+          const div = document.createElement('div');
+          div.style.position = 'absolute';
+          div.style.pointerEvents = 'none';
+          
+          const pulse = document.createElement('div');
+          pulse.className = 'pulse-ring';
+          pulse.style.width = '12px';
+          pulse.style.height = '12px';
+          pulse.style.borderRadius = '50%';
+          pulse.style.background = '#333333';
+          pulse.style.opacity = '0.6';
+          
+          div.appendChild(pulse);
+          this.div = div;
+          
+          const panes = this.getPanes();
+          if (panes) {
+            panes.overlayMouseTarget.appendChild(div);
+          }
+        }
+
+        draw() {
+          if (!this.div) return;
+          
+          const overlayProjection = this.getProjection();
+          const position = overlayProjection.fromLatLngToDivPixel(this.position);
+          
+          if (position) {
+            this.div.style.left = position.x + 'px';
+            this.div.style.top = position.y + 'px';
+            this.div.style.transform = 'translate(-50%, -50%)';
+          }
+        }
+
+        onRemove() {
+          if (this.div && this.div.parentNode) {
+            this.div.parentNode.removeChild(this.div);
+            this.div = null;
+          }
+        }
+      }
+
+      const blackPulseOverlay = new BlackPulseOverlay(new window.google.maps.LatLng(blackMarkerLocation.lat, blackMarkerLocation.lng));
+      blackPulseOverlay.setMap(map);
 
       // Draw route line
       const routePath = new window.google.maps.Polyline({
