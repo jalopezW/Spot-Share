@@ -20,10 +20,21 @@ export function BookingModal({
   spot,
   isOpen,
   onClose,
+  distance,
+  rating,
+  sellerInfo,
+  price,
 }: {
   spot: (typeof parkingSpots)[0];
   isOpen: boolean;
   onClose: () => void;
+  distance?: string; // e.g. "0.3 mi"
+  rating?: number; // e.g. 4.7
+  sellerInfo?: {
+    name?: string;
+    rating?: number[] | number;
+  } | null;
+  price?: number | string;
 }) {
   const [hours, setHours] = useState(1);
   const [showPayment, setShowPayment] = useState(false);
@@ -109,35 +120,7 @@ export function BookingModal({
                 </div>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Select Duration
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[1, 2, 3, 4, 6, 8, 12, 24].map((h) => (
-                    <button
-                      key={h}
-                      onClick={() => setHours(h)}
-                      className={`py-3 px-2 rounded-lg font-semibold text-sm transition-all ${
-                        hours === h
-                          ? "bg-blue-600 text-white shadow-lg scale-105"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {h}h
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 mb-6 border border-blue-100">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Duration:</span>
-                  <span className="font-semibold">
-                    {hours} hour{hours > 1 ? "s" : ""}
-                  </span>
-                </div>
                 <div className="border-t border-blue-200 pt-2 mt-2">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-800">
