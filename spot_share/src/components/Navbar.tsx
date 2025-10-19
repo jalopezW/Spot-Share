@@ -130,7 +130,13 @@ export function Navbar() {
           />
         </div>
       </div>
-      <SignUpModal open={openSignUp} onClose={() => handleSignUp()} />
+      {openSignUp ? (
+        <div className="mt-[100vh]">
+          <SignUpModal open={openSignUp} onClose={() => handleSignUp()} />
+        </div>
+      ) : (
+        <></>
+      )}
     </nav>
   );
 }
