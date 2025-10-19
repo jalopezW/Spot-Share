@@ -2,6 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getUserLocation } from "@/utils/location";
+import { updateLocation } from "../../../databaseService";
+import { useAuth } from "./AuthContext";
+import { loggedInUserID } from "../../../authService";
 
 interface LocationContextType {
   userLocation: { lat: number; lng: number } | null;
@@ -15,6 +18,7 @@ const LocationContext = createContext<LocationContextType | undefined>(
 );
 
 export function LocationProvider({ children }: { children: React.ReactNode }) {
+  const user = useAuth();
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
@@ -28,7 +32,8 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     try {
       const location = await getUserLocation();
       setUserLocation(location);
-      console.log("User location:", location);
+      const userID = loggedInUserID();
+      await updateLocation(userID, location.lat, location.lng);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Error getting user location";
@@ -64,4 +69,3 @@ export function useLocation() {
   }
   return context;
 }
-
