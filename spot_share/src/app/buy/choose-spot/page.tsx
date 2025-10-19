@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { BookingModal } from "@/components/items/StripeComponent";
+import { BookingModal } from "@/components/items/BookingModal";
 import {
   MapPin,
   DollarSign,
