@@ -1,15 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { MapPin, Edit3, Check } from "lucide-react";
 import Modal from "@/components/items/Modal";
 import SwipeToConfirm from "@/components/ui/swiper";
 import { toast } from "sonner";
-import {
-  GoogleMap,
-  LoadScript,
-  Marker,
-  OverlayView,
-} from "@react-google-maps/api";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import {
   getColor,
   getMake,
@@ -21,7 +17,6 @@ import {
 import { loggedInUserID, useAuthentication } from "../../../../authService";
 import { auth } from "../../../../firebaseConfig";
 import { useAuth } from "@/components/contexts/AuthContext";
-import { getUserLocation } from "@/utils/location";
 
 // Theme tokens inspired by the screenshot
 const theme = {
@@ -45,15 +40,7 @@ function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
 
   // Map center - same as buy page (LMU campus area)
   const center = { lat: 33.966787, lng: -118.417631 };
-
-  // Map zoom level (1-20, higher = more zoomed in)
   const [zoom] = useState(19);
-
-  // Store user's current location
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
 
   // Map container styling
   const mapContainerStyle = {
@@ -79,21 +66,6 @@ function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
     }
   };
 
-  // Fetch user location when component mounts
-  useEffect(() => {
-    const fetchUserLocation = async () => {
-      try {
-        const location = await getUserLocation();
-        setUserLocation(location);
-        console.log("User location:", location);
-      } catch (error) {
-        console.error("Error getting user location:", error);
-      }
-    };
-
-    fetchUserLocation();
-  }, []);
-
   return (
     <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
       <GoogleMap
@@ -102,49 +74,6 @@ function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
         options={mapOptions}
         onClick={handleMapClick}
       >
-        {/* User location marker - ygy=[[Blue */}
-        {userLocation && (
-          <>
-            {/* Pulse overlay on user location */}
-            <OverlayView
-              position={userLocation}
-              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  transform: "translate(-50%, -50%)",
-                  pointerEvents: "none",
-                }}
-              >
-                <div
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    background: "#0C76F2",
-                    borderRadius: "50%",
-                    position: "relative",
-                  }}
-                >
-                  <div
-                    className="pulse-ring"
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      position: "absolute",
-                      top: "0",
-                      left: "0",
-                      borderRadius: "50%",
-                      background: "#59A3FF",
-                      opacity: 0.6,
-                    }}
-                  />
-                </div>
-              </div>
-            </OverlayView>
-          </>
-        )}
-
         {/* Show marker at selected position */}
         {markerPosition && (
           <Marker
@@ -159,7 +88,7 @@ function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
 
 export default function ChooseSpot() {
   const [address, setAddress] = useState("Hannon Parking lot, LMU");
-  const [coords, setCoords] = useState({ lat: 33.966787, lng: -118.417631 }); // Updated to match buy page
+  const [coords, setCoords] = useState({ lat: 33.966787, lng: -118.417631 });
   const [markerPosition, setMarkerPosition] = useState<{
     lat: number;
     lng: number;
@@ -253,15 +182,16 @@ type ModalProps = {
   onClose: () => void;
   coords: { lat: number; lng: number };
 };
+
 const SellConfirmationModal: React.FC<ModalProps> = ({
   open,
   onClose,
   coords,
 }: ModalProps) => {
   useAuth();
+  const router = useRouter();
 
   const [time, setTime] = useState(new Date(2006, 3, 24));
-
   const [model, setModel] = useState("");
   const [make, setMake] = useState("");
   const [color, setColor] = useState("");
@@ -283,13 +213,18 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
       description: `Available at ${time}`,
     });
 
-    // Go to eta page
-    onClose();
+    // Navigate to ETA page
+    router.push("/sell/choose-spot/eta");
+
+    // Close modal after navigation
+    setTimeout(() => {
+      onClose();
+    }, 100);
   };
 
   function setTime2(value: string) {
     const now = new Date();
-    const todayDate = now.toISOString().split("T")[0]; // Gets "YYYY-MM-DD"
+    const todayDate = now.toISOString().split("T")[0];
     setTime(new Date(`${todayDate}T${value}:00`));
   }
 

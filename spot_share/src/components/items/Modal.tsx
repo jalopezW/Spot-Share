@@ -11,7 +11,6 @@ import { X } from "lucide-react";
  * - Smooth open animation
  */
 
-// items/ModalsAbout.tsx
 type ModalProps = {
   open: boolean;
   onClose: () => void;
@@ -44,10 +43,13 @@ function Modal({ open, onClose, title, children, className }: ModalProps) {
         "[data-autofocus], button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
       );
       toFocus?.focus();
+
       const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
+
       // kick off enter animation on next frame
       requestAnimationFrame(() => setAnimate(true));
+
       return () => {
         document.body.style.overflow = prev;
         setAnimate(false);
@@ -68,15 +70,16 @@ function Modal({ open, onClose, title, children, className }: ModalProps) {
   return (
     <div
       className={[
+        // overlay
         "fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm",
-        // backdrop fade-in
+        "p-4 sm:p-8", // <-- add safe padding around the viewport
         "transition-opacity duration-200",
-        animate ? "bg-white/40 opacity-100" : "bg-black/0 opacity-0",
+        animate ? "bg-black/40 opacity-100" : "bg-black/0 opacity-0",
       ].join(" ")}
       onMouseDown={onBackdropClick}
       aria-hidden={!open}
     >
-      {/* Panel: leaves a visible margin so it doesn't fully cover the screen */}
+      {/* Panel */}
       <div
         ref={dialogRef}
         role="dialog"
@@ -85,15 +88,25 @@ function Modal({ open, onClose, title, children, className }: ModalProps) {
         className={[
           "relative rounded-2xl shadow-2xl outline-none",
           "bg-white text-zinc-900 dark:bg-gray-200 dark:text-zinc-900",
-          // Sizing: most of the screen, small rim visible
-          "m-3 w-[94vw] h-[92vh] md:w-[92vw] md:h-[88vh] max-w-[1400px]",
+
+          // ---- CHANGES START ----
+          // Instead of fixed height (which can clip at the top),
+          // use a top margin + max-height. This pushes the modal down
+          // and ensures internal scrolling if it's tall.
+          "w-[94vw] md:w-[809vw] max-w-[1000px]",
+          "mt-16 md:mt-20", // push panel down from navbar
+          "max-h-[85vh] overflow-hidden", // never exceed viewport height
+          // ---- CHANGES END ----
+
           className,
+
           // Enter animation
           "transform transition-all duration-200 ease-out",
           animate
             ? "opacity-100 scale-100 translate-y-0"
             : "opacity-0 scale-95 translate-y-1",
         ].join(" ")}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white/80 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-200/80">
@@ -109,8 +122,8 @@ function Modal({ open, onClose, title, children, className }: ModalProps) {
           </button>
         </div>
 
-        {/* Body (scrollable) */}
-        <div className="h-[calc(100%-3.5rem)] overflow-auto p-6">
+        {/* Body (scrollable inside the panel) */}
+        <div className="p-6 overflow-auto max-h-[calc(85vh-4rem)]">
           {children}
         </div>
       </div>

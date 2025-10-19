@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import SwipeToConfirm from "@/components/ui/swiper";
 
@@ -11,6 +12,7 @@ export const SellConfirmationModal: React.FC<ModalProps> = ({
   open,
   onClose,
 }: ModalProps) => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     time: "",
     carMake: "",
@@ -31,7 +33,14 @@ export const SellConfirmationModal: React.FC<ModalProps> = ({
     });
 
     setFormData({ time: "", carMake: "", carModel: "", carLicense: "" });
-    onClose();
+
+    // Navigate to ETA tracking page
+    router.push("/sell/choose-spot/eta");
+
+    // Close modal after navigation
+    setTimeout(() => {
+      onClose();
+    }, 100);
   };
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
