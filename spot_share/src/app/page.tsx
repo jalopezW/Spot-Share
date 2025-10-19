@@ -4,29 +4,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { MapPin, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { GoogleMap, LoadScript, Marker, OverlayView } from "@react-google-maps/api";
-
-/**
- * HELPER FUNCTION: GET USER LOCATION
- */
-const getUserLocation = (): Promise<{ lat: number; lng: number }> => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by your browser'));
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          reject(error);
-        }
-      );
-    }
-  });
-};
+import { getUserLocation } from "@/utils/location";
 
 // Map Section Component with Interactive Marking
 const MapSection = () => {
