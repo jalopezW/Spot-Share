@@ -1,9 +1,30 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { MapPin, DollarSign, Star, Navigation } from "lucide-react";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
-import { BookingModal } from "@/components/items/StripeComponent";
+import {
+  MapPin,
+  DollarSign,
+  Star,
+  Navigation,
+  X,
+  Clock,
+  ArrowLeft,
+  CreditCard,
+} from "lucide-react";
+import {
+  GoogleMap,
+  LoadScript,
+  Marker,
+  OverlayView,
+} from "@react-google-maps/api";
+import { useAuth } from "@/components/contexts/AuthContext";
+import { getSpots, getUserInfo } from "../../../../databaseService";
+import { auth } from "../../../../firebaseConfig";
+import { loggedInUserID } from "../../../../authService";
+
+/**
+ * PARKING SPOTS DATA
+ */
 
 const parkingSpots = [
   {
@@ -14,6 +35,7 @@ const parkingSpots = [
     rating: 4.5,
     distance: "0.1 mi",
     available: true,
+    availableUntil: "14:30",
     lat: 33.967133,
     lng: -118.417822,
   },
@@ -25,8 +47,9 @@ const parkingSpots = [
     rating: 4.8,
     distance: "0.2 mi",
     available: true,
-    lat: 33.968,
-    lng: -118.418,
+    availableUntil: "16:45",
+    lat: 33.96679,
+    lng: -118.4177,
   },
   {
     id: 3,
@@ -36,6 +59,7 @@ const parkingSpots = [
     rating: 4.2,
     distance: "0.3 mi",
     available: false,
+    availableUntil: "12:15",
     lat: 33.967,
     lng: -118.42,
   },
@@ -43,7 +67,7 @@ const parkingSpots = [
 
 /**
  * PARKING SPOT CARD COMPONENT
- */
+//  */
 function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -110,7 +134,7 @@ function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
  */
 function InteractiveGoogleMap() {
   const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
-  const [zoom] = useState(19);
+  const [zoom] = useState(18.9);
 
   const mapContainerStyle = {
     width: "100%",
@@ -125,6 +149,25 @@ function InteractiveGoogleMap() {
     streetViewControl: false,
   };
 
+  useAuth();
+  const [parkingSpots, setParkingSpots] = useState<any[]>([]);
+
+  async function updateParams() {
+    if (auth.currentUser != null) {
+      setParkingSpots(await getSpots());
+    }
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await updateParams();
+      } catch (err) {}
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <LoadScript
       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
@@ -138,16 +181,39 @@ function InteractiveGoogleMap() {
       >
         {/* Dynamically render markers for all parking spots from data */}
         {parkingSpots.map((spot) => (
-          <Marker
-            key={spot.id}
-            position={{ lat: spot.lat, lng: spot.lng }}
-            title={`${spot.name} - ${spot.price}`}
-            icon={{
-              url: spot.available
-                ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Available = green
-                : "http://maps.google.com/mapfiles/ms/icons/red-dot.png", // Occupied = red
-            }}
-          />
+          <React.Fragment key={spot.id}>
+            <Marker
+              position={{ lat: spot.Lat, lng: spot.Long }}
+              icon={{
+                url: spot.available
+                  ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Available = green
+                  : "http://maps.google.com/mapfiles/ms/icons/red-dot.png", // Occupied = red
+              }}
+            />
+            {/* Time display below the pin using OverlayView */}
+            <OverlayView
+              position={{ lat: spot.Lat, lng: spot.Long }}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  transform: "translate(-50%, 10px)",
+                  backgroundColor: "rgba(0, 0, 0, 0.8)",
+                  color: "white",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  whiteSpace: "nowrap",
+                  pointerEvents: "none",
+                }}
+              >
+                {spot.Time.toLocaleString()}
+              </div>
+            </OverlayView>
+          </React.Fragment>
+
         ))}
       </GoogleMap>
     </LoadScript>
@@ -155,6 +221,28 @@ function InteractiveGoogleMap() {
 }
 
 export default function ChooseSpotPage() {
+  useAuth();
+  const [parkingSpots, setParkingSpots] = useState<any[]>([]);
+  const [userInfo, setUserInfo] = useState<any>({});
+
+  async function updateParams() {
+    if (auth.currentUser != null) {
+      const userID = loggedInUserID();
+      setUserInfo(getUserInfo(userID));
+      setParkingSpots(await getSpots());
+    }
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await updateParams();
+      } catch (err) {}
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-20 h-screen flex">
@@ -177,7 +265,78 @@ export default function ChooseSpotPage() {
 
             <div className="space-y-4">
               {parkingSpots.map((spot) => (
-                <ParkingSpotCard key={spot.id} spot={spot} />
+                <div
+                  key={spot.id}
+                  className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500"
+                >
+                  {/* Card Header: Spot name and availability badge */}
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg text-gray-800">
+                      Name here
+                    </h3>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        spot.available
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {spot.available ? "Available" : "Occupied"}
+                    </span>
+                  </div>
+
+                  {/* Address with map pin icon */}
+                  <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    Address here
+                  </p>
+
+                  {/* Time information */}
+                  <div className="flex items-center gap-1 mb-3">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      Available until:{" "}
+                      <span className="font-semibold">
+                        {spot.Time.toLocaleString()}
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Spot details: price, distance, and rating */}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      {/* Price per hour */}
+                      <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
+                        <DollarSign className="w-5 h-5" />
+                        {spot.Price}
+                      </span>
+                      {/* Distance from user */}
+                      <span className="text-gray-600 text-sm flex items-center gap-1">
+                        <Navigation className="w-4 h-4" />
+                        distance here
+                      </span>
+                    </div>
+
+                    {/* Star rating */}
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-gray-700 font-semibold">
+                        {/* {spot.userInfo.rating.reduce(
+                          (accumulator: number, currentValue: number) =>
+                            accumulator + currentValue,
+                          0
+                        )} */}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Book Now button (only shown for available spots) */}
+                  {spot.available && (
+                    <button className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">
+                      Book Now
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </div>

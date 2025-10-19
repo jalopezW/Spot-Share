@@ -1,92 +1,123 @@
 "use client";
+
 import Link from "next/link";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   login,
   logout,
-  loggedInUserDisplayName,
   useAuthentication,
   loggedInUserID,
 } from "../../authService";
 import Modal from "./items/Modal";
 import { newUser } from "../../databaseService";
-import {
-  collection,
-  getDoc,
-  setDoc,
-  doc,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-  increment,
-  updateDoc,
-} from "firebase/firestore";
+import { getDoc, doc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
+import {
+  LogIn,
+  LogOut,
+  Search,
+  Car,
+  Palette,
+  BadgeCheck,
+  User,
+} from "lucide-react";
 
-// Navbar Component
+/* -----------------------------
+   Navbar
+----------------------------- */
 export function Navbar() {
-  let user = useAuthentication();
+  const user = useAuthentication();
   const [openSignUp, setOpenSignUp] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function handleLogin() {
     await login();
     const userID = loggedInUserID();
-
-    if (userID != undefined) {
+    if (userID) {
       const docRef = doc(db, "users", userID);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        setOpenSignUp(true);
-      }
+      if (!docSnap.exists()) setOpenSignUp(true);
     }
   }
 
   return (
-    <nav className="flex items-center justify-between gap-4 p-4 bg-white shadow-md fixed top-0 left-0 w-full z-50">
-      <Link href="/">
-        <div className="text-2xl font-bold text-blue-600">Spot Share</div>
-      </Link>
+    <nav className="fixed top-0 left-0 z-50 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+        {/* Brand */}
+        <Link href="/" className="group inline-flex items-center gap-2">
+          <div className="rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 p-[6px] text-white shadow-md shadow-blue-600/20 transition group-hover:scale-105">
+            <Car className="h-5 w-5" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-slate-900">
+            Spot <span className="text-blue-600">Share</span>
+          </span>
+        </Link>
 
-      <div className="flex-1 max-w-xl mx-4">
-        <label htmlFor="search" className="sr-only">
-          Search parking spots
-        </label>
-        <input
-          id="search"
-          type="search"
-          placeholder="Search for parking spots..."
-          className="w-full border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-          aria-label="Search parking spots"
-        />
+        {/* Search (desktop) */}
+        <div className="hidden flex-1 sm:block">
+          <label htmlFor="search" className="sr-only">
+            Search parking spots
+          </label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              id="search"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search for parking spots…"
+              className="w-full rounded-full border border-slate-200 bg-white px-9 py-2 text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            />
+          </div>
+        </div>
+
+        {/* Auth */}
+        {!user ? (
+          <button
+            onClick={handleLogin}
+            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100 hover:shadow"
+          >
+            <LogIn className="h-4 w-4" />
+            Login / Sign Up
+          </button>
+        ) : (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => logout()}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
+        )}
       </div>
-      {!user ? (
-        <div className="flex items-center gap-3">
-          <button
-            className="px-4 py-2 text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition"
-            onClick={() => handleLogin()}
-          >
-            Login/Sign Up
-          </button>
+
+      {/* Mobile search */}
+      <div className="sm:hidden px-4 pb-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search for parking spots…"
+            className="w-full rounded-full border border-slate-200 bg-white px-9 py-2 text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          />
         </div>
-      ) : (
-        <div className="flex items-center gap-3">
-          <button
-            className="px-4 py-2 text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition"
-            onClick={() => logout()}
-          >
-            Logout
-          </button>
-        </div>
-      )}
+      </div>
 
       <SignUpModal open={openSignUp} onClose={() => setOpenSignUp(false)} />
     </nav>
   );
 }
 
+/* -----------------------------
+   Sign Up Modal
+----------------------------- */
 type ModalProps = { open: boolean; onClose: () => void };
-const SignUpModal: React.FC<ModalProps> = ({ open, onClose }: ModalProps) => {
+
+const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
   const [first_name, setfirstName] = useState("");
   const [last_name, setlastName] = useState("");
   const [color, setColor] = useState("");
@@ -94,75 +125,49 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }: ModalProps) => {
   const [model, setModel] = useState("");
   const [year, setYear] = useState<number | "">("");
   const [plate, setPlate] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [vehicleError, setVehicleError] = useState<string | null>(null);
 
   async function testLogin() {
     const userID = loggedInUserID();
-
-    if (userID != undefined) {
+    if (userID) {
       const docRef = doc(db, "users", userID);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        logout();
-      }
+      if (!docSnap.exists()) logout();
     }
   }
 
-  async function checkModelExists(make: string, model: string, year: number) {
-    const url = `/api/model-exists?make=${encodeURIComponent(
-      make.trim()
-    )}&model=${encodeURIComponent(model.trim())}&year=${year}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Model check failed: ${res.status}`);
-    const data = await res.json();
-    return Boolean(data.exists);
-  }
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setVehicleError(null);
+  const allValid =
+    first_name.trim() &&
+    last_name.trim() &&
+    make.trim() &&
+    model.trim() &&
+    color.trim() &&
+    plate.trim();
 
-      if (year === "" || Number.isNaN(Number(year))) {
-        setVehicleError("Please enter a valid model year.");
-        return;
-      }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!allValid || submitting) return;
 
+    try {
       setSubmitting(true);
-      try {
-        const exists = await checkModelExists(make, model, Number(year));
-        if (!exists) {
-          setVehicleError(
-            "That make/model/year combo wasn't found. Please double-check."
-          );
-          setSubmitting(false);
-          return;
-        }
+      await newUser({
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
+        color: color.trim(),
+        make: make.trim(),
+        model: model.trim(),
+        plate: plate.trim().toUpperCase(),
+      });
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-        await newUser({
-          first_name,
-          last_name,
-          color,
-          make,
-          model,
-          plate,
-          year: Number(year),
-        });
-
-        setSubmitting(false);
-        onClose();
-      } catch (err) {
-        console.error(err);
-        setVehicleError(
-          "We couldn't verify the vehicle right now. Please try again."
-        );
-        setSubmitting(false);
-      }
-    },
-    [first_name, last_name, color, make, model, plate, year, onClose]
-  );
 
   return (
     <Modal
@@ -171,63 +176,169 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }: ModalProps) => {
         onClose();
         testLogin();
       }}
-      title="Sign Up"
+      title=""
     >
-      <form onSubmit={handleSubmit}>
-        <div className="p-4">
-          <div>
-            First Name:{" "}
-            <input
-              type="text"
-              onChange={(e) => setfirstName(e.target.value)}
-            ></input>
-          </div>
-          <div>
-            Last Name:{" "}
-            <input
-              type="text"
-              onChange={(e) => setlastName(e.target.value)}
-            ></input>
-          </div>
-          <div>
-            Car Make:{" "}
-            <input
-              type="text"
-              onChange={(e) => setMake(e.target.value)}
-            ></input>
-          </div>
-          <div>
-            Car Model:{" "}
-            <input
-              type="text"
-              onChange={(e) => setModel(e.target.value)}
-            ></input>
-          </div>
-          <div>
-            Color:{" "}
-            <input
-              type="text"
-              onChange={(e) => setColor(e.target.value)}
-            ></input>
-          </div>
-          <div>
-            Plate Name:{" "}
-            <input
-              type="text"
-              onChange={(e) => setPlate(e.target.value)}
-            ></input>
-          </div>
-          <div>Payments: tf??</div>
-
-          <button
-            disabled={submitting}
-            type="submit"
-            className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
-          >
-            Submit
-          </button>
+      <div className="space-y-6 p-1 sm:p-2">
+        {/* Header */}
+        <div className="space-y-1 text-center">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            Create your Spot Share profile
+          </h2>
+          <p className="text-sm text-slate-500">
+            Help buyers spot you quickly at meet-up.
+          </p>
         </div>
-      </form>
+
+        {/* Card */}
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="rounded-t-2xl bg-gradient-to-r from-blue-600 to-indigo-500 p-3 text-white">
+            <div className="flex items-center gap-2">
+              <BadgeCheck className="h-5 w-5" />
+              <span className="font-semibold">Your Info</span>
+            </div>
+
+          </div>
+
+
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6">
+            {/* Name */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <LabeledInput
+                label="First name"
+                value={first_name}
+                onChange={setfirstName}
+                placeholder="Sebastian"
+                autoComplete="given-name"
+                icon={<User className="h-4 w-4" />}
+                required
+              />
+              <LabeledInput
+                label="Last name"
+                value={last_name}
+                onChange={setlastName}
+                placeholder="Rocha"
+                autoComplete="family-name"
+                icon={<User className="h-4 w-4" />}
+                required
+              />
+            </div>
+
+            <div className="my-5 h-px w-full bg-slate-200" />
+
+            {/* Vehicle */}
+            <div className="mb-3 flex items-center gap-2 text-slate-800">
+              <Car className="h-5 w-5 text-blue-600" />
+              <h3 className="text-base font-semibold">Vehicle details</h3>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <LabeledInput
+                label="Make"
+                value={make}
+                onChange={setMake}
+                placeholder="Toyota"
+                icon={<Car className="h-4 w-4" />}
+                required
+              />
+              <LabeledInput
+                label="Model"
+                value={model}
+                onChange={setModel}
+                placeholder="Camry"
+                icon={<Car className="h-4 w-4" />}
+                required
+              />
+              <LabeledInput
+                label="Color"
+                value={color}
+                onChange={setColor}
+                placeholder="Blue"
+                icon={<Palette className="h-4 w-4" />}
+                required
+              />
+              <LabeledInput
+                label="License plate"
+                value={plate}
+                onChange={setPlate}
+                placeholder="8ABC123"
+                icon={<BadgeCheck className="h-4 w-4" />}
+                helper="We’ll only show the last 3 characters to other users."
+                required
+              />
+            </div>
+
+            {/* Submit */}
+            <div className="mt-6 space-y-3">
+              <button
+                type="submit"
+                disabled={!allValid || submitting}
+                className={`w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-500 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition
+                ${
+                  !allValid || submitting
+                    ? "opacity-60"
+                    : "hover:brightness-105 active:translate-y-[1px]"
+                }`}
+              >
+                {submitting ? "Creating profile…" : "Save and continue"}
+              </button>
+              <p className="text-center text-xs text-slate-500">
+                By continuing you agree to our Terms &amp; Privacy Policy.
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
     </Modal>
   );
 };
+
+/* -----------------------------
+   Small input component
+----------------------------- */
+function LabeledInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  required,
+  autoComplete,
+  icon,
+  helper,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  required?: boolean;
+  autoComplete?: string;
+  icon?: React.ReactNode;
+  helper?: string;
+}) {
+  const id = React.useId();
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        {icon && (
+          <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            {icon}
+          </div>
+        )}
+        <input
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          required={required}
+          className={`w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+            icon ? "pl-9" : ""
+          }`}
+        />
+      </div>
+      {helper && <p className="text-xs text-slate-500">{helper}</p>}
+    </div>
+  );
+}
