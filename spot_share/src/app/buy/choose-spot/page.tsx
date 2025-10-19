@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { BookingModal } from "@/components/items/BookingModal";
 import {
   MapPin,
@@ -18,7 +18,7 @@ import { useLocation } from "@/components/contexts/LocationContext";
 import { getSpots, getUserInfo } from "../../../../databaseService";
 import { auth } from "../../../../firebaseConfig";
 import { loggedInUserID } from "../../../../authService";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 function InteractiveGoogleMap() {
   const [zoom] = useState(18.9);
@@ -159,13 +159,15 @@ export default function ChooseSpotPage() {
   const [selectedSpot, setSelectedSpot] = useState<any | null>(null);
   const router = useRouter();
   const params = useSearchParams();
+  const pathname = usePathname();
+  const ran = useRef(false);
 
   useEffect(() => {
     if (params.get("from") === "home") {
-      router.refresh(); // refetches Server Components/data
-      // or: window.location.reload(); // true hard reload (rarely needed)
+      window.history.replaceState(null, "", pathname); // remove param
+      window.location.reload(); // now it won't loop
     }
-  }, [params, router]);
+  }, [params, pathname]);
 
   async function updateParams() {
     if (auth.currentUser != null) {
