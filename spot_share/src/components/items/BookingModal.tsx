@@ -2,20 +2,6 @@ import { Clock, DollarSign, MapPin, Navigation, Star, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { StripePaymentForm } from "./StripeComponent";
 
-const parkingSpots = [
-  {
-    id: 1,
-    name: "LMU Parking Structure A",
-    address: "1 LMU Drive",
-    price: "$5/hr",
-    rating: 4.5,
-    distance: "0.1 mi",
-    available: true,
-    lat: 33.967133,
-    lng: -118.417822,
-  },
-];
-
 export function BookingModal({
   spot,
   isOpen,
@@ -25,7 +11,14 @@ export function BookingModal({
   sellerInfo,
   price,
 }: {
-  spot: (typeof parkingSpots)[0];
+  spot: {
+    lat: number;
+    long: number;
+    price: number;
+    available: boolean;
+    time: Date;
+    userId: string;
+  };
   isOpen: boolean;
   onClose: () => void;
   distance?: string; // e.g. "0.3 mi"
@@ -88,35 +81,32 @@ export function BookingModal({
           {!showPayment ? (
             <>
               <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-bold text-xl text-gray-800">
-                    {spot.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm flex items-center gap-1 mt-1">
-                    <MapPin className="w-4 h-4" />
-                    {spot.address}
-                  </p>
-                </div>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
-                  Available
-                </span>
+                {spot.available ? (
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                    <span className="font-bold text-gray-800">Available</span>
+                  </span>
+                ) : (
+                  <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold">
+                    <span className="font-bold text-gray-800">Unavailable</span>
+                  </span>
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
                   <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                   <p className="text-xs text-gray-600">Rate</p>
-                  <p className="font-bold text-gray-800">{spot.price}</p>
+                  <p className="font-bold text-gray-800">{price}</p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-3 text-center">
                   <Navigation className="w-5 h-5 text-purple-600 mx-auto mb-1" />
                   <p className="text-xs text-gray-600">Distance</p>
-                  <p className="font-bold text-gray-800">{spot.distance}</p>
+                  <p className="font-bold text-gray-800">{distance}</p>
                 </div>
                 <div className="bg-yellow-50 rounded-lg p-3 text-center">
                   <Star className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
                   <p className="text-xs text-gray-600">Rating</p>
-                  <p className="font-bold text-gray-800">{spot.rating}</p>
+                  <p className="font-bold text-gray-800">{rating}</p>
                 </div>
               </div>
 
@@ -151,7 +141,7 @@ export function BookingModal({
           ) : (
             <StripePaymentForm
               amount={totalPrice}
-              spotName={spot.name}
+              spot={spot}
               hours={hours}
               spotId={spot.id}
               onBack={handleBackToBooking}
