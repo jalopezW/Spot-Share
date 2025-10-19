@@ -3,8 +3,8 @@ import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import { User } from "firebase/auth";
 
-export function login() {
-  return signInWithPopup(auth, new GoogleAuthProvider());
+export async function login() {
+  return await signInWithPopup(auth, new GoogleAuthProvider());
 }
 
 export function logout() {
@@ -14,6 +14,12 @@ export function logout() {
 export function loggedInUserDisplayName() {
   if (auth.currentUser != null) {
     return auth.currentUser.displayName;
+  }
+}
+
+export function loggedInUserID() {
+  if (auth.currentUser != null) {
+    return auth.currentUser.uid;
   }
 }
 
