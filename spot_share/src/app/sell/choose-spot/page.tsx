@@ -257,7 +257,7 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
     });
 
     // Navigate to ETA page
-    router.push("/sell/choose-spot/eta");
+    router.push("/sell/choose-spot/waiting-page");
 
     // Close modal after navigation
     setTimeout(() => {
