@@ -18,74 +18,8 @@ import { useLocation } from "@/components/contexts/LocationContext";
 import { getSpots, getUserInfo } from "../../../../databaseService";
 import { auth } from "../../../../firebaseConfig";
 import { loggedInUserID } from "../../../../authService";
+import { useRouter, useSearchParams } from "next/navigation";
 
-/**
- * PARKING SPOT CARD COMPONENT
-//  */
-// function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-
-//   return (
-//     <>
-//       <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
-//         <div className="flex justify-between items-start mb-2">
-//           <h3 className="font-bold text-lg text-gray-800">{spot.name}</h3>
-//           <span
-//             className={`px-2 py-1 rounded-full text-xs font-semibold ${
-//               spot.available
-//                 ? "bg-green-100 text-green-800"
-//                 : "bg-red-100 text-red-800"
-//             }`}
-//           >
-//             {spot.available ? "Available" : "Occupied"}
-//           </span>
-//         </div>
-
-//         <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
-//           <MapPin className="w-4 h-4" />
-//           {spot.address}
-//         </p>
-
-//         <div className="flex justify-between items-center">
-//           <div className="flex items-center gap-4">
-//             <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
-//               <DollarSign className="w-5 h-5" />
-//               {spot.price.replace("$", "")}
-//             </span>
-//             <span className="text-gray-600 text-sm flex items-center gap-1">
-//               <Navigation className="w-4 h-4" />
-//               {spot.distance}
-//             </span>
-//           </div>
-
-//           <div className="flex items-center gap-1">
-//             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-//             <span className="text-gray-700 font-semibold">{spot.rating}</span>
-//           </div>
-//         </div>
-
-//         {spot.available && (
-//           <button
-//             onClick={() => setIsModalOpen(true)}
-//             className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition"
-//           >
-//             Book Now
-//           </button>
-//         )}
-//       </div>
-
-//       <BookingModal
-//         spot={spot}
-//         isOpen={isModalOpen}
-//         onClose={() => setIsModalOpen(false)}
-//       />
-//     </>
-//   );
-// }
-
-/**
- * GOOGLE MAPS COMPONENT WITH PARKING SPOTS
- */
 function InteractiveGoogleMap() {
   const [zoom] = useState(18.9);
 
@@ -223,6 +157,15 @@ export default function ChooseSpotPage() {
   const [chosenSpot, setChosenSpot] = useState<any | null>(null);
 
   const [selectedSpot, setSelectedSpot] = useState<any | null>(null);
+  const router = useRouter();
+  const params = useSearchParams();
+
+  useEffect(() => {
+    if (params.get("from") === "home") {
+      router.refresh(); // refetches Server Components/data
+      // or: window.location.reload(); // true hard reload (rarely needed)
+    }
+  }, [params, router]);
 
   async function updateParams() {
     if (auth.currentUser != null) {
