@@ -69,9 +69,8 @@ export function Navbar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         {/* Brand */}
         <Link href="/" className="group inline-flex items-center gap-2">
-          <div className="rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 p-[6px] text-white shadow-md shadow-blue-600/20 transition group-hover:scale-105">
-            <Car className="h-5 w-5" />
-          </div>
+          <img src={"/SpotShare.png"} className="rounded-xl h-10 w-10" />
+
           <span className="text-xl font-bold tracking-tight text-slate-900">
             Spot <span className="text-blue-600">Share</span>
           </span>
