@@ -201,7 +201,7 @@ export default function SellerEtaPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Car className="w-6 h-6 text-blue-600" />
-                Buyer Information
+                Parking Spot Information
               </h3>
 
               <div className="space-y-4">
