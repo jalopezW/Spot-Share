@@ -123,12 +123,8 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
   const [color, setColor] = useState("");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
-  const [year, setYear] = useState<number | "">("");
   const [plate, setPlate] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  const [submitting, setSubmitting] = useState(false);
-  const [vehicleError, setVehicleError] = useState<string | null>(null);
 
   async function testLogin() {
     const userID = loggedInUserID();
@@ -138,7 +134,6 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
       if (!docSnap.exists()) logout();
     }
   }
-
 
   const allValid =
     first_name.trim() &&
@@ -168,7 +163,6 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
     }
   };
 
-
   return (
     <Modal
       open={open}
@@ -196,9 +190,7 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
               <BadgeCheck className="h-5 w-5" />
               <span className="font-semibold">Your Info</span>
             </div>
-
           </div>
-
 
           <form onSubmit={handleSubmit} className="p-4 sm:p-6">
             {/* Name */}
