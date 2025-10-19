@@ -1,10 +1,20 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MapPin, Edit3, Check } from "lucide-react";
 import Modal from "@/components/items/Modal";
 import SwipeToConfirm from "@/components/ui/swiper";
 import { toast } from "sonner";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import {
+  getColor,
+  getMake,
+  getModel,
+  getPlate,
+  getUserInfo,
+} from "../../../../databaseService";
+import { loggedInUserID, useAuthentication } from "../../../../authService";
+import { auth } from "../../../../firebaseConfig";
+import { useAuth } from "@/components/contexts/AuthContext";
 
 // Theme tokens inspired by the screenshot
 const theme = {
@@ -25,11 +35,11 @@ interface InteractiveMapProps {
 function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
   // Load API key from environment variable
   const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
-  
+
   // Map center - same as buy page (LMU campus area)
   const center = { lat: 33.966787, lng: -118.417631 };
   const [zoom] = useState(19);
-  
+
   // Map container styling
   const mapContainerStyle = {
     width: "100%",
@@ -77,7 +87,10 @@ function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
 export default function ChooseSpot() {
   const [address, setAddress] = useState("Hannon Parking lot, LMU");
   const [coords, setCoords] = useState({ lat: 33.966787, lng: -118.417631 }); // Updated to match buy page
-  const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [openSellConfirmation, setOpenSellConfirmation] = useState(false);
 
   // Handle map click to update coordinates
@@ -86,7 +99,7 @@ export default function ChooseSpot() {
     setCoords(newCoords);
     setMarkerPosition(newCoords);
     setAddress(`Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`);
-    
+
     // Show toast notification
     toast.success("Spot location updated!", {
       description: `Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`,
@@ -109,7 +122,7 @@ export default function ChooseSpot() {
       <main className="relative mx-auto w-full max-w-6xl grow px-0 sm:px-6 pt-6 pb-28">
         <div className="relative h-[60vh] w-full overflow-hidden rounded-2xl shadow-lg ring-1 ring-slate-200">
           {/* Interactive Google Map - same as buy page */}
-          <InteractiveMap 
+          <InteractiveMap
             markerPosition={markerPosition}
             onMapClick={handleMapClick}
           />
@@ -126,15 +139,20 @@ export default function ChooseSpot() {
                   <MapPin className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="min-w-0 grow">
-                  <p className="truncate text-sm text-slate-500">Confirm spot</p>
-                  <p className="truncate font-medium text-slate-900">{address}</p>
+                  <p className="truncate text-sm text-slate-500">
+                    Confirm spot
+                  </p>
+                  <p className="truncate font-medium text-slate-900">
+                    {address}
+                  </p>
                 </div>
               </div>
 
               <div className="flex w-full sm:w-auto items-center gap-2">
-                <button 
+                <button
                   onClick={() => setMarkerPosition(null)}
-                  className="w-full sm:w-auto rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                  className="w-full sm:w-auto rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
                   Not this spot
                 </button>
                 <button
@@ -161,12 +179,19 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
   open,
   onClose,
 }: ModalProps) => {
+  useAuth();
+
   const [formData, setFormData] = useState({
     time: "",
     carMake: "",
     carModel: "",
     carLicense: "",
   });
+
+  const [model, setModel] = useState("");
+  const [make, setMake] = useState("");
+  const [color, setColor] = useState("");
+  const [license, setLicense] = useState("");
 
   const isFormValid = formData.time && formData.carMake && formData.carModel;
 
@@ -187,6 +212,29 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  async function updateParams() {
+    if (auth.currentUser != null) {
+      const userID = loggedInUserID();
+      const userInfo = await getUserInfo(userID);
+      if (userInfo != undefined) {
+        setModel(userInfo.model);
+        setMake(userInfo.make);
+        setColor(userInfo.color);
+        setLicense(userInfo.plate);
+      }
+    }
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await updateParams();
+      } catch (err) {}
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <Modal
@@ -220,51 +268,6 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
               placeholder="Select time"
             />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="carMake" className="text-md font-medium mr-5">
-                Car Make
-              </label>
-              <input
-                id="carMake"
-                type="text"
-                value={formData.carMake}
-                onChange={(e) => handleInputChange("carMake", e.target.value)}
-                className="h-12 text-base"
-                placeholder="e.g., Toyota"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="carModel" className="text-md font-medium mr-5">
-                Car Model
-              </label>
-              <input
-                id="carModel"
-                type="text"
-                value={formData.carModel}
-                onChange={(e) => handleInputChange("carModel", e.target.value)}
-                className="h-12 text-base"
-                placeholder="e.g., Camry"
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="carModel" className="text-md font-medium mr-5">
-                License Plate
-              </label>
-              <input
-                id="carLicense"
-                type="text"
-                value={formData.carLicense}
-                onChange={(e) =>
-                  handleInputChange("carLicense", e.target.value)
-                }
-                className="h-12 text-base"
-                placeholder="ABC123"
-              />
-            </div>
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -276,17 +279,9 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
                 {formData.time || "Not set"}
               </p>
               <p>
-                <span className="font-medium">Vehicle:</span>{" "}
-                {formData.carMake && formData.carModel
-                  ? `${formData.carMake} ${formData.carModel}`
-                  : "Not specified"}
+                Vehicle: {color} {make} {model}
               </p>
-              <p>
-                <span className="font-medium">Plate #:</span>{" "}
-                {formData.carLicense
-                  ? `${formData.carLicense}`
-                  : "Not specified"}
-              </p>
+              <p>Plate #: {license}</p>
             </div>
           </div>
 

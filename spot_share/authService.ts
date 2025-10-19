@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
 import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { auth } from "./firebaseConfig";
-import { User } from "firebase/auth";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  createContext,
+  ReactNode,
+} from "react";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 
 export async function login() {
   return await signInWithPopup(auth, new GoogleAuthProvider());
