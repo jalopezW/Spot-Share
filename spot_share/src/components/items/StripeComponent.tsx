@@ -65,8 +65,7 @@ export function BookingModal({
   const [hours, setHours] = useState(1);
   const [showPayment, setShowPayment] = useState(false);
 
-  const hourlyRate = parseFloat(spot.price.replace("$", "").replace("/hr", ""));
-  const totalPrice = hourlyRate * hours;
+  const totalPrice = 4;
 
   useEffect(() => {
     if (!isOpen) {
@@ -170,12 +169,6 @@ export function BookingModal({
               </div>
 
               <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 mb-6 border border-blue-100">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Hourly Rate:</span>
-                  <span className="font-semibold">
-                    ${hourlyRate.toFixed(2)}/hr
-                  </span>
-                </div>
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-600">Duration:</span>
                   <span className="font-semibold">

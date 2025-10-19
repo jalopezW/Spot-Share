@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { BookingModal } from "@/components/items/StripeComponent";
 import {
   MapPin,
   DollarSign,
@@ -21,49 +22,6 @@ import { useAuth } from "@/components/contexts/AuthContext";
 import { getSpots, getUserInfo } from "../../../../databaseService";
 import { auth } from "../../../../firebaseConfig";
 import { loggedInUserID } from "../../../../authService";
-
-/**
- * PARKING SPOTS DATA
- */
-
-const parkingSpots = [
-  {
-    id: 1,
-    name: "LMU Parking Structure A",
-    address: "1 LMU Drive",
-    price: "$5/hr",
-    rating: 4.5,
-    distance: "0.1 mi",
-    available: true,
-    availableUntil: "14:30",
-    lat: 33.967133,
-    lng: -118.417822,
-  },
-  {
-    id: 2,
-    name: "Campus Center Lot",
-    address: "1 Loyola Marymount University Dr",
-    price: "$8/hr",
-    rating: 4.8,
-    distance: "0.2 mi",
-    available: true,
-    availableUntil: "16:45",
-    lat: 33.96679,
-    lng: -118.4177,
-  },
-  {
-    id: 3,
-    name: "Bluff Parking",
-    address: "Del Rey Hills Dr",
-    price: "$6/hr",
-    rating: 4.2,
-    distance: "0.3 mi",
-    available: false,
-    availableUntil: "12:15",
-    lat: 33.967,
-    lng: -118.42,
-  },
-];
 
 /**
  * PARKING SPOT CARD COMPONENT
@@ -213,7 +171,6 @@ function InteractiveGoogleMap() {
               </div>
             </OverlayView>
           </React.Fragment>
-
         ))}
       </GoogleMap>
     </LoadScript>
@@ -224,6 +181,9 @@ export default function ChooseSpotPage() {
   useAuth();
   const [parkingSpots, setParkingSpots] = useState<any[]>([]);
   const [userInfo, setUserInfo] = useState<any>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [selectedSpot, setSelectedSpot] = useState<any | null>(null);
 
   async function updateParams() {
     if (auth.currentUser != null) {
@@ -265,77 +225,84 @@ export default function ChooseSpotPage() {
 
             <div className="space-y-4">
               {parkingSpots.map((spot) => (
-                <div
-                  key={spot.id}
-                  className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500"
-                >
-                  {/* Card Header: Spot name and availability badge */}
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg text-gray-800">
-                      Name here
-                    </h3>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        spot.available
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {spot.available ? "Available" : "Occupied"}
-                    </span>
-                  </div>
-
-                  {/* Address with map pin icon */}
-                  <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    Address here
-                  </p>
-
-                  {/* Time information */}
-                  <div className="flex items-center gap-1 mb-3">
-                    <Clock className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      Available until:{" "}
-                      <span className="font-semibold">
-                        {spot.Time.toLocaleString()}
-                      </span>
-                    </span>
-                  </div>
-
-                  {/* Spot details: price, distance, and rating */}
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      {/* Price per hour */}
-                      <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
-                        <DollarSign className="w-5 h-5" />
-                        {spot.Price}
-                      </span>
-                      {/* Distance from user */}
-                      <span className="text-gray-600 text-sm flex items-center gap-1">
-                        <Navigation className="w-4 h-4" />
-                        distance here
+                <div key={spot.id}>
+                  <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
+                    {/* Card Header: Spot name and availability badge */}
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-lg text-gray-800">
+                        Name here
+                      </h3>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          spot.available
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {spot.available ? "Available" : "Occupied"}
                       </span>
                     </div>
 
-                    {/* Star rating */}
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-gray-700 font-semibold">
-                        {/* {spot.userInfo.rating.reduce(
+                    {/* Address with map pin icon */}
+                    <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      Address here
+                    </p>
+
+                    {/* Time information */}
+                    <div className="flex items-center gap-1 mb-3">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">
+                        Available until:{" "}
+                        <span className="font-semibold">
+                          {spot.Time.toLocaleString()}
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Spot details: price, distance, and rating */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        {/* Price per hour */}
+                        <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
+                          <DollarSign className="w-5 h-5" />
+                          {spot.Price}
+                        </span>
+                        {/* Distance from user */}
+                        <span className="text-gray-600 text-sm flex items-center gap-1">
+                          <Navigation className="w-4 h-4" />
+                          distance here
+                        </span>
+                      </div>
+
+                      {/* Star rating */}
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-gray-700 font-semibold">
+                          {/* {spot.userInfo.rating.reduce(
                           (accumulator: number, currentValue: number) =>
                             accumulator + currentValue,
                           0
                         )} */}
-                      </span>
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Book Now button (only shown for available spots) */}
-                  {spot.available && (
-                    <button className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">
-                      Book Now
-                    </button>
-                  )}
+                    {/* Book Now button (only shown for available spots) */}
+                    {spot.available && (
+                      <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition"
+                      >
+                        Book Now
+                      </button>
+                    )}
+                  </div>
+                  <BookingModal
+                    spot={spot}
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                  />
                 </div>
               ))}
             </div>
