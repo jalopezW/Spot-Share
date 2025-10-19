@@ -11,6 +11,7 @@ import {
   getModel,
   getPlate,
   getUserInfo,
+  sellSpot,
 } from "../../../../databaseService";
 import { loggedInUserID, useAuthentication } from "../../../../authService";
 import { auth } from "../../../../firebaseConfig";
@@ -169,31 +170,35 @@ export default function ChooseSpot() {
       <SellConfirmationModal
         open={openSellConfirmation}
         onClose={() => setOpenSellConfirmation(false)}
+        coords={coords}
       />
     </div>
   );
 }
 
-type ModalProps = { open: boolean; onClose: () => void };
+type ModalProps = {
+  open: boolean;
+  onClose: () => void;
+  coords: { lat: number; lng: number };
+};
 const SellConfirmationModal: React.FC<ModalProps> = ({
   open,
   onClose,
+  coords,
 }: ModalProps) => {
   useAuth();
 
-  const [formData, setFormData] = useState({
-    time: "",
-    carMake: "",
-    carModel: "",
-    carLicense: "",
-  });
+  const [time, setTime] = useState(new Date(2006, 3, 24));
 
   const [model, setModel] = useState("");
   const [make, setMake] = useState("");
   const [color, setColor] = useState("");
   const [license, setLicense] = useState("");
 
-  const isFormValid = formData.time && formData.carMake && formData.carModel;
+  const lat = coords.lat;
+  const long = coords.lng;
+
+  const isFormValid = time != new Date(2006, 3, 24);
 
   const handleConfirm = () => {
     if (!isFormValid) {
@@ -201,17 +206,20 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
       return;
     }
 
+    sellSpot({ lat, long, price: 4, time });
     toast.success("Spot listing confirmed!", {
-      description: `${formData.carMake} ${formData.carModel} - Available at ${formData.time}`,
+      description: `Available at ${time}`,
     });
 
-    setFormData({ time: "", carMake: "", carModel: "", carLicense: "" });
+    // Go to eta page
     onClose();
   };
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  function setTime2(value: string) {
+    const now = new Date();
+    const todayDate = now.toISOString().split("T")[0]; // Gets "YYYY-MM-DD"
+    setTime(new Date(`${todayDate}T${value}:00`));
+  }
 
   async function updateParams() {
     if (auth.currentUser != null) {
@@ -260,10 +268,7 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
             <input
               id="time"
               type="time"
-              value={formData.time}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleInputChange("time", e.target.value)
-              }
+              onChange={(e) => setTime2(e.target.value)}
               className="h-12 text-base"
               placeholder="Select time"
             />
@@ -276,7 +281,6 @@ const SellConfirmationModal: React.FC<ModalProps> = ({
             <div className="space-y-1 text-lg text-muted-foreground">
               <p>
                 <span className="font-medium">Time:</span>{" "}
-                {formData.time || "Not set"}
               </p>
               <p>
                 Vehicle: {color} {make} {model}

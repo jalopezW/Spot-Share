@@ -3,7 +3,10 @@ import { toast } from "sonner";
 import Modal from "./Modal";
 import SwipeToConfirm from "@/components/ui/swiper";
 
-type ModalProps = { open: boolean; onClose: () => void };
+type ModalProps = {
+  open: boolean;
+  onClose: () => void;
+};
 export const SellConfirmationModal: React.FC<ModalProps> = ({
   open,
   onClose,

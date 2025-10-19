@@ -169,7 +169,7 @@ export async function sellSpot(spot: {
 }) {
   const userID = loggedInUserID();
   if (userID != undefined) {
-    await setDoc(doc(db, "spots"), {
+    await setDoc(doc(db, "spots", userID), {
       Lat: spot.lat,
       Long: spot.long,
       Price: spot.price,
