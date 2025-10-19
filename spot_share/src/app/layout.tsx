@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Spot Share - Find & Book Parking Spots",
   description: "Book parking spots easily and securely with Spot Share",
+  icons: {
+    icon: "/SpotShare.png", // Path to your favicon in the public folder
+  },
 };
 
 export default function RootLayout({
