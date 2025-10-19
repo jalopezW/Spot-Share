@@ -26,66 +26,66 @@ import { loggedInUserID } from "../../../../authService";
 /**
  * PARKING SPOT CARD COMPONENT
 //  */
-function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+// function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
+//   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  return (
-    <>
-      <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-bold text-lg text-gray-800">{spot.name}</h3>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-              spot.available
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {spot.available ? "Available" : "Occupied"}
-          </span>
-        </div>
+//   return (
+//     <>
+//       <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
+//         <div className="flex justify-between items-start mb-2">
+//           <h3 className="font-bold text-lg text-gray-800">{spot.name}</h3>
+//           <span
+//             className={`px-2 py-1 rounded-full text-xs font-semibold ${
+//               spot.available
+//                 ? "bg-green-100 text-green-800"
+//                 : "bg-red-100 text-red-800"
+//             }`}
+//           >
+//             {spot.available ? "Available" : "Occupied"}
+//           </span>
+//         </div>
 
-        <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
-          <MapPin className="w-4 h-4" />
-          {spot.address}
-        </p>
+//         <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
+//           <MapPin className="w-4 h-4" />
+//           {spot.address}
+//         </p>
 
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
-              <DollarSign className="w-5 h-5" />
-              {spot.price.replace("$", "")}
-            </span>
-            <span className="text-gray-600 text-sm flex items-center gap-1">
-              <Navigation className="w-4 h-4" />
-              {spot.distance}
-            </span>
-          </div>
+//         <div className="flex justify-between items-center">
+//           <div className="flex items-center gap-4">
+//             <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
+//               <DollarSign className="w-5 h-5" />
+//               {spot.price.replace("$", "")}
+//             </span>
+//             <span className="text-gray-600 text-sm flex items-center gap-1">
+//               <Navigation className="w-4 h-4" />
+//               {spot.distance}
+//             </span>
+//           </div>
 
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-gray-700 font-semibold">{spot.rating}</span>
-          </div>
-        </div>
+//           <div className="flex items-center gap-1">
+//             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+//             <span className="text-gray-700 font-semibold">{spot.rating}</span>
+//           </div>
+//         </div>
 
-        {spot.available && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition"
-          >
-            Book Now
-          </button>
-        )}
-      </div>
+//         {spot.available && (
+//           <button
+//             onClick={() => setIsModalOpen(true)}
+//             className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition"
+//           >
+//             Book Now
+//           </button>
+//         )}
+//       </div>
 
-      <BookingModal
-        spot={spot}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </>
-  );
-}
+//       <BookingModal
+//         spot={spot}
+//         isOpen={isModalOpen}
+//         onClose={() => setIsModalOpen(false)}
+//       />
+//     </>
+//   );
+// }
 
 /**
  * GOOGLE MAPS COMPONENT WITH PARKING SPOTS
@@ -167,7 +167,11 @@ function InteractiveGoogleMap() {
                   pointerEvents: "none",
                 }}
               >
-                {spot.Time.toLocaleString()}
+                {spot.Time.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
               </div>
             </OverlayView>
           </React.Fragment>
@@ -188,9 +192,54 @@ export default function ChooseSpotPage() {
   async function updateParams() {
     if (auth.currentUser != null) {
       const userID = loggedInUserID();
-      setUserInfo(getUserInfo(userID));
-      setParkingSpots(await getSpots());
+      const temp_user_info = await getUserInfo(userID);
+      if (temp_user_info != undefined) {
+        setUserInfo(temp_user_info);
+        const newSpots = await getSpots();
+
+        setParkingSpots(
+          newSpots.map((spot: any) => ({
+            ...spot,
+            distance: distanceInMiles(
+              spot.Lat,
+              spot.Long,
+              temp_user_info.lat,
+              temp_user_info.long
+            ),
+          }))
+        );
+      }
     }
+  }
+
+  function toRadians(degrees: number) {
+    return degrees * (Math.PI / 180);
+  }
+
+  function distanceInMiles(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ) {
+    const R = 3958.8; // Earth's radius in miles
+
+    // Convert degrees to radians
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distance = R * c;
+
+    return distance;
   }
 
   useEffect(() => {
@@ -230,7 +279,7 @@ export default function ChooseSpotPage() {
                     {/* Card Header: Spot name and availability badge */}
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold text-lg text-gray-800">
-                        Name here
+                        Hannon Parking Lot
                       </h3>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -243,11 +292,11 @@ export default function ChooseSpotPage() {
                       </span>
                     </div>
 
-                    {/* Address with map pin icon */}
+                    {/* Address with map pin icon
                     <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
                       Address here
-                    </p>
+                    </p> */}
 
                     {/* Time information */}
                     <div className="flex items-center gap-1 mb-3">
@@ -255,7 +304,11 @@ export default function ChooseSpotPage() {
                       <span className="text-sm text-gray-600">
                         Available until:{" "}
                         <span className="font-semibold">
-                          {spot.Time.toLocaleString()}
+                          {spot.Time.toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
                         </span>
                       </span>
                     </div>
@@ -271,7 +324,7 @@ export default function ChooseSpotPage() {
                         {/* Distance from user */}
                         <span className="text-gray-600 text-sm flex items-center gap-1">
                           <Navigation className="w-4 h-4" />
-                          distance here
+                          {spot.distance.toFixed(1)} mi
                         </span>
                       </div>
 
@@ -279,11 +332,13 @@ export default function ChooseSpotPage() {
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-gray-700 font-semibold">
-                          {/* {spot.userInfo.rating.reduce(
-                          (accumulator: number, currentValue: number) =>
-                            accumulator + currentValue,
-                          0
-                        )} */}
+                          {spot.userInfo
+                            ? spot.userInfo.rating.reduce(
+                                (accumulator: number, currentValue: number) =>
+                                  accumulator + currentValue,
+                                0
+                              ) / spot.userInfo.rating.length
+                            : 5}
                         </span>
                       </div>
                     </div>
@@ -302,6 +357,18 @@ export default function ChooseSpotPage() {
                     spot={spot}
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
+                    distance={spot.distance}
+                    rating={
+                      spot.userInfo
+                        ? spot.userInfo.rating.reduce(
+                            (accumulator: number, currentValue: number) =>
+                              accumulator + currentValue,
+                            0
+                          ) / spot.userInfo.rating.length
+                        : 5
+                    }
+                    sellerInfo={spot.userInfo}
+                    price={4}
                   />
                 </div>
               ))}

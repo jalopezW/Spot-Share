@@ -42,7 +42,7 @@ export async function newUser(user: {
         plate: user.plate,
         lat: 0,
         long: 0,
-        rating: [],
+        rating: [5],
       });
     }
   }
