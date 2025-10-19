@@ -63,7 +63,11 @@ const MapSection = () => {
   return (
     <div className="h-screen relative">
       {/* Interactive Google Map */}
-      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+      <LoadScript 
+        googleMapsApiKey={GOOGLE_MAPS_API_KEY}
+        id="google-maps-script"
+        preventGoogleFontsLoading
+      >
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           center={center}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, DollarSign, Star, Navigation, X, Clock, ArrowLeft, CreditCard } from "lucide-react";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 
 /**
  * PARKING SPOTS DATA
@@ -341,52 +342,52 @@ function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-bold text-lg text-gray-800">{spot.name}</h3>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-              spot.available
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {spot.available ? "Available" : "Occupied"}
+    <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="font-bold text-lg text-gray-800">{spot.name}</h3>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+            spot.available
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {spot.available ? "Available" : "Occupied"}
+        </span>
+      </div>
+
+      <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
+        <MapPin className="w-4 h-4" />
+        {spot.address}
+      </p>
+
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
+            <DollarSign className="w-5 h-5" />
+            {spot.price.replace("$", "")}
+          </span>
+          <span className="text-gray-600 text-sm flex items-center gap-1">
+            <Navigation className="w-4 h-4" />
+            {spot.distance}
           </span>
         </div>
 
-        <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
-          <MapPin className="w-4 h-4" />
-          {spot.address}
-        </p>
-
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
-              <DollarSign className="w-5 h-5" />
-              {spot.price.replace("$", "")}
-            </span>
-            <span className="text-gray-600 text-sm flex items-center gap-1">
-              <Navigation className="w-4 h-4" />
-              {spot.distance}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-gray-700 font-semibold">{spot.rating}</span>
-          </div>
+        <div className="flex items-center gap-1">
+          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+          <span className="text-gray-700 font-semibold">{spot.rating}</span>
         </div>
+      </div>
 
-        {spot.available && (
+      {spot.available && (
           <button
             onClick={() => setIsModalOpen(true)}
             className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition"
           >
-            Book Now
-          </button>
-        )}
-      </div>
+          Book Now
+        </button>
+      )}
+    </div>
 
       <BookingModal
         spot={spot}
@@ -402,9 +403,7 @@ function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
  */
 function InteractiveGoogleMap() {
   const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
-  const [center] = useState({ lat: 33.9687, lng: -118.4189 });
-  const [zoom] = useState(17);
-  const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
+  const [zoom] = useState(19);
 
   const mapContainerStyle = {
     width: "100%",
@@ -419,58 +418,32 @@ function InteractiveGoogleMap() {
     streetViewControl: false,
   };
 
-  const onMapClick = useCallback((event: any) => {
-    if (event.latLng) {
-      const lat = event.latLng.lat();
-      const lng = event.latLng.lng();
-
-      setMarkers((current) => [...current, { lat, lng }]);
-      console.log("Marked location:", { lat, lng });
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem("lastMarkedLocation", JSON.stringify({ lat, lng }));
-      }
-    }
-  }, []);
-
   return (
-    <div className="h-full relative">
-      <div style={{ width: '100%', height: '100%' }}>
-        <iframe
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          loading="lazy"
-          allowFullScreen
-          src={`https://www.google.com/maps/embed/v1/view?key=${GOOGLE_MAPS_API_KEY}&center=33.9687,-118.4189&zoom=17`}
-        />
-      </div>
-      
-      {parkingSpots.map((spot, index) => (
-        <div
-          key={spot.id}
-          className="absolute"
-          style={{
-            top: `${35 + index * 18}%`,
-            left: `${30 + index * 20}%`,
-          }}
-        >
-          <div className="relative group">
-            <div
-              className={`w-6 h-6 rounded-full shadow-lg animate-pulse border-2 border-white ${
-                spot.available ? "bg-green-500" : "bg-red-500"
-              }`}
-              style={{ animationDelay: `${index * 0.3}s` }}
-            />
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-              <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                {spot.name}
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <LoadScript 
+      googleMapsApiKey={GOOGLE_MAPS_API_KEY}
+      id="google-maps-script"
+      preventGoogleFontsLoading
+    >
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={{ lat: 33.966787, lng: -118.417631 }}
+        options={mapOptions}
+      >
+        {/* Dynamically render markers for all parking spots from data */}
+        {parkingSpots.map((spot) => (
+          <Marker
+            key={spot.id}
+            position={{ lat: spot.lat, lng: spot.lng }}
+            title={`${spot.name} - ${spot.price}`}
+            icon={{
+              url: spot.available 
+                ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Available = green
+                : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",   // Occupied = red
+            }}
+          />
+        ))}
+      </GoogleMap>
+    </LoadScript>
   );
 }
 
