@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Clock, DollarSign, Users, Edit2, X, Bell, Eye } from 'lucide-react';
+import { useLocation } from "@/components/contexts/LocationContext";
 
 interface Activity {
   id: number;
@@ -11,6 +12,8 @@ interface Activity {
 }
 
 export default function WaitingPage() {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const { userLocation } = useLocation();
   const [viewCount, setViewCount] = useState<number>(3);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const [countdown, setCountdown] = useState<number>(30);
@@ -58,6 +61,229 @@ export default function WaitingPage() {
       clearInterval(viewTimer);
     };
   }, []);
+
+  // Initialize Google Maps
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    // Don't initialize map until we have user location
+    if (!userLocation) return;
+
+    // Google Maps is loaded via GoogleMapsProvider, just initialize when ready
+    if (window.google && window.google.maps) {
+      initMap();
+    } else {
+      // Wait for GoogleMapsProvider to load the script
+      const checkInterval = setInterval(() => {
+        if (window.google && window.google.maps) {
+          clearInterval(checkInterval);
+          initMap();
+        }
+      }, 100);
+
+      return () => clearInterval(checkInterval);
+    }
+  }, [userLocation]);
+
+  const initMap = () => {
+    if (
+      !mapRef.current ||
+      typeof window === "undefined" ||
+      !window.google ||
+      !window.google.maps ||
+      !userLocation
+    ) {
+      console.log("Map not ready");
+      return;
+    }
+
+    try {
+      // Parking spot location
+      const parkingLot = { lat: 33.966566, lng: -118.417312 };
+
+      // Seller's location (user location)
+      const sellerLocation = { lat: userLocation.lat, lng: userLocation.lng };
+
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: parkingLot,
+        zoom: 16,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        zoomControl: true,
+      });
+
+      // Red parking spot marker
+      new window.google.maps.Marker({
+        position: parkingLot,
+        map: map,
+        title: "Parking Spot",
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 12,
+          fillColor: "#EF4444",
+          fillOpacity: 1,
+          strokeColor: "#ffffff",
+          strokeWeight: 3,
+        },
+      });
+
+      // Add red double pulse overlay
+      class RedPulseOverlay extends window.google.maps.OverlayView {
+        position: google.maps.LatLng;
+        div: HTMLDivElement | null = null;
+
+        constructor(position: google.maps.LatLng) {
+          super();
+          this.position = position;
+        }
+
+        onAdd() {
+          const div = document.createElement('div');
+          div.style.position = 'absolute';
+          div.style.pointerEvents = 'none';
+          div.style.width = '0px';
+          div.style.height = '0px';
+          
+          const pulse1 = document.createElement('div');
+          pulse1.className = 'pulse-ring';
+          pulse1.style.position = 'absolute';
+          pulse1.style.left = '-7.5px';
+          pulse1.style.top = '-7.5px';
+          pulse1.style.width = '15px';
+          pulse1.style.height = '15px';
+          pulse1.style.borderRadius = '50%';
+          pulse1.style.background = '#E82A2A';
+          pulse1.style.opacity = '0.6';
+
+          const pulse2 = document.createElement('div');
+          pulse2.className = 'pulse-ring';
+          pulse2.style.position = 'absolute';
+          pulse2.style.left = '-7.5px';
+          pulse2.style.top = '-7.5px';
+          pulse2.style.width = '15px';
+          pulse2.style.height = '15px';
+          pulse2.style.borderRadius = '50%';
+          pulse2.style.background = '#E82A2A';
+          pulse2.style.opacity = '0.85';
+          pulse2.style.animationDelay = '0.2s';
+          
+          div.appendChild(pulse1);
+          div.appendChild(pulse2);
+          this.div = div;
+          
+          const panes = this.getPanes();
+          if (panes) {
+            panes.overlayMouseTarget.appendChild(div);
+          }
+        }
+
+        draw() {
+          if (!this.div) return;
+          
+          const overlayProjection = this.getProjection();
+          const position = overlayProjection.fromLatLngToDivPixel(this.position);
+          
+          if (position) {
+            this.div.style.left = position.x + 'px';
+            this.div.style.top = position.y + 'px';
+            this.div.style.transform = 'translate(-50%, -50%)';
+          }
+        }
+
+        onRemove() {
+          if (this.div && this.div.parentNode) {
+            this.div.parentNode.removeChild(this.div);
+            this.div = null;
+          }
+        }
+      }
+
+      const redPulseOverlay = new RedPulseOverlay(new window.google.maps.LatLng(parkingLot.lat, parkingLot.lng));
+      redPulseOverlay.setMap(map);
+
+      // Blue seller marker
+      new window.google.maps.Marker({
+        position: sellerLocation,
+        map: map,
+        title: "Your Location",
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: "#0C76F2",
+          fillOpacity: 1,
+          strokeColor: "#FFFFFF",
+          strokeWeight: 2,
+        },
+      });
+
+      // Add blue pulse overlay
+      class BluePulseOverlay extends window.google.maps.OverlayView {
+        position: google.maps.LatLng;
+        div: HTMLDivElement | null = null;
+
+        constructor(position: google.maps.LatLng) {
+          super();
+          this.position = position;
+        }
+
+        onAdd() {
+          const div = document.createElement('div');
+          div.style.position = 'absolute';
+          div.style.pointerEvents = 'none';
+          
+          const pulse = document.createElement('div');
+          pulse.className = 'pulse-ring';
+          pulse.style.width = '20px';
+          pulse.style.height = '20px';
+          pulse.style.borderRadius = '50%';
+          pulse.style.background = '#59A3FF';
+          pulse.style.opacity = '0.6';
+          
+          div.appendChild(pulse);
+          this.div = div;
+          
+          const panes = this.getPanes();
+          if (panes) {
+            panes.overlayMouseTarget.appendChild(div);
+          }
+        }
+
+        draw() {
+          if (!this.div) return;
+          
+          const overlayProjection = this.getProjection();
+          const position = overlayProjection.fromLatLngToDivPixel(this.position);
+          
+          if (position) {
+            this.div.style.left = position.x + 'px';
+            this.div.style.top = position.y + 'px';
+            this.div.style.transform = 'translate(-50%, -50%)';
+          }
+        }
+
+        onRemove() {
+          if (this.div && this.div.parentNode) {
+            this.div.parentNode.removeChild(this.div);
+            this.div = null;
+          }
+        }
+      }
+
+      const bluePulseOverlay = new BluePulseOverlay(new window.google.maps.LatLng(sellerLocation.lat, sellerLocation.lng));
+      bluePulseOverlay.setMap(map);
+
+      // Fit bounds to show both markers
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend(parkingLot);
+      bounds.extend(sellerLocation);
+      map.fitBounds(bounds);
+
+      console.log("Map initialized successfully");
+    } catch (error) {
+      console.error("Error initializing map:", error);
+    }
+  };
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -163,17 +389,11 @@ export default function WaitingPage() {
 
               {/* Map Preview */}
               <div className="mt-6 rounded-lg overflow-hidden border border-gray-200">
-                <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <div className="absolute inset-0 opacity-20">
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                      <MapPin className="w-12 h-12 text-blue-600" />
-                    </div>
-                  </div>
-                  <div className="relative z-10 text-center">
-                    <MapPin className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">Your spot location</p>
-                  </div>
-                </div>
+                <div 
+                  ref={mapRef}
+                  className="relative h-64 bg-gray-200"
+                  style={{ minHeight: "256px" }}
+                />
               </div>
             </div>
           </div>
@@ -224,4 +444,11 @@ export default function WaitingPage() {
       </div>
     </div>
   );
+}
+
+// TypeScript declarations for Google Maps
+declare global {
+  interface Window {
+    google: any;
+  }
 }
