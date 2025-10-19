@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, DollarSign, Star, Navigation, X, Clock, ArrowLeft, CreditCard } from "lucide-react";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, LoadScript, Marker, OverlayView } from "@react-google-maps/api";
 
 /**
  * PARKING SPOTS DATA
@@ -16,6 +16,7 @@ const parkingSpots = [
     rating: 4.5,
     distance: "0.1 mi",
     available: true,
+    availableUntil: "14:30",
     lat: 33.967133,
     lng: -118.417822,
   },
@@ -27,8 +28,9 @@ const parkingSpots = [
     rating: 4.8,
     distance: "0.2 mi",
     available: true,
-    lat: 33.968,
-    lng: -118.418,
+    availableUntil: "16:45",
+    lat: 33.966790,
+    lng: -118.4177,
   },
   {
     id: 3,
@@ -38,6 +40,7 @@ const parkingSpots = [
     rating: 4.2,
     distance: "0.3 mi",
     available: false,
+    availableUntil: "12:15",
     lat: 33.967,
     lng: -118.42,
   },
@@ -431,16 +434,36 @@ function InteractiveGoogleMap() {
       >
         {/* Dynamically render markers for all parking spots from data */}
         {parkingSpots.map((spot) => (
-          <Marker
-            key={spot.id}
-            position={{ lat: spot.lat, lng: spot.lng }}
-            title={`${spot.name} - ${spot.price}`}
-            icon={{
-              url: spot.available 
-                ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Available = green
-                : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",   // Occupied = red
-            }}
-          />
+          <React.Fragment key={spot.id}>
+            <Marker
+              position={{ lat: spot.lat, lng: spot.lng }}
+              icon={{
+                url: spot.available 
+                  ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Available = green
+                  : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",   // Occupied = red
+              }}
+            />
+            {/* Time display below the pin using OverlayView */}
+            <OverlayView
+              position={{ lat: spot.lat, lng: spot.lng }}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div style={{
+                position: 'absolute',
+                transform: 'translate(-50%, 10px)',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+              }}>
+                {spot.availableUntil}
+              </div>
+            </OverlayView>
+          </React.Fragment>
         ))}
       </GoogleMap>
     </LoadScript>
@@ -473,7 +496,64 @@ export default function ChooseSpotPage() {
 
             <div className="space-y-4">
               {parkingSpots.map((spot) => (
-                <ParkingSpotCard key={spot.id} spot={spot} />
+                <div key={spot.id} className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
+                  {/* Card Header: Spot name and availability badge */}
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg text-gray-800">{spot.name}</h3>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        spot.available
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {spot.available ? "Available" : "Occupied"}
+                    </span>
+                  </div>
+
+                  {/* Address with map pin icon */}
+                  <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    {spot.address}
+                  </p>
+
+                  {/* Time information */}
+                  <div className="flex items-center gap-1 mb-3">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      Available until: <span className="font-semibold">{spot.availableUntil}</span>
+                    </span>
+                  </div>
+
+                  {/* Spot details: price, distance, and rating */}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      {/* Price per hour */}
+                      <span className="text-blue-600 font-bold text-lg flex items-center gap-1">
+                        <DollarSign className="w-5 h-5" />
+                        {spot.price.replace("$", "")}
+                      </span>
+                      {/* Distance from user */}
+                      <span className="text-gray-600 text-sm flex items-center gap-1">
+                        <Navigation className="w-4 h-4" />
+                        {spot.distance}
+                      </span>
+                    </div>
+
+                    {/* Star rating */}
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-gray-700 font-semibold">{spot.rating}</span>
+                    </div>
+                  </div>
+
+                  {/* Book Now button (only shown for available spots) */}
+                  {spot.available && (
+                    <button className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">
+                      Book Now
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </div>
