@@ -15,6 +15,7 @@ import {
   limit,
   increment,
   updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
 
 export async function newUser(user: {
@@ -41,7 +42,7 @@ export async function newUser(user: {
         plate: user.plate,
         lat: 0,
         long: 0,
-        rating: 5,
+        rating: [],
       });
     }
   }
@@ -113,6 +114,23 @@ export async function getPlate(userID: string | undefined) {
   return "N/A";
 }
 
+export async function getRating(userID: string | undefined) {
+  if (userID != undefined) {
+    const docRef = doc(db, "users", userID);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap
+        .data()
+        .rating.reduce(
+          (accumulator: number, currentValue: number) =>
+            accumulator + currentValue,
+          0
+        );
+    }
+  }
+  return 0;
+}
+
 export async function getCoords(userID: string | undefined) {
   if (userID != undefined) {
     const docRef = doc(db, "users", userID);
@@ -151,12 +169,15 @@ export async function updateLocation(
   }
 }
 
-export async function updateRating(userID: string | undefined, rating: number) {
+export async function updateRating(
+  userID: string | undefined,
+  newRating: number
+) {
   if (userID != undefined) {
     const docRef = doc(db, "users", userID);
 
     await updateDoc(docRef, {
-      rating,
+      rating: arrayUnion(newRating),
     });
   }
 }
@@ -175,23 +196,40 @@ export async function sellSpot(spot: {
       Price: spot.price,
       Time: spot.time,
       userID: userID,
+      available: true,
     });
   }
 }
 
-export async function getSpots() {
-  const spotRef = collection(db, "spots");
-  const userID = loggedInUserID();
-  //   const { userLat, userLong } = await getCoords(userID);
-  const q = query(spotRef, orderBy("Rating", "desc"));
+export async function getSpots(): Promise<any> {
+  try {
+    const spotsCollection = collection(db, "spots");
+    const snapshot = await getDocs(spotsCollection);
 
-  const querySnapshot = await getDocs(q);
+    // Map through spots and fetch user info for each
+    const spotsPromises = snapshot.docs.map(async (doc) => {
+      const spotData = doc.data();
+      const userInfo = await getUserInfo(spotData.userID);
 
-  // ADD SORT BY LONG LAT
-  return querySnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+      return {
+        id: doc.id,
+        Lat: spotData.Lat,
+        Long: spotData.Long,
+        Price: spotData.Price,
+        Time: spotData.Time?.toDate() || new Date(),
+        userID: spotData.userID,
+        available: spotData.available,
+        userInfo: userInfo || null,
+      };
+    });
+
+    // Wait for all user info to be fetched
+    const spots = await Promise.all(spotsPromises);
+
+    return spots;
+  } catch (error) {
+    return [];
+  }
 }
 
 function distance(Lat1: number, Lat2: number, Long1: number, Long2: number) {
