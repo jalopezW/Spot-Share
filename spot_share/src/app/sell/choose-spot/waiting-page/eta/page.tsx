@@ -349,7 +349,7 @@ export default function EtaPage() {
         {
           origin: new window.google.maps.LatLng(buyerLocation.lat, buyerLocation.lng),
           destination: new window.google.maps.LatLng(parkingLot.lat, parkingLot.lng),
-          travelMode: window.google.maps.TravelMode.DRIVING,
+          travelMode: window.google.maps.TravelMode.WALKING,
         },
         (result: any, status: any) => {
           if (status === window.google.maps.DirectionsStatus.OK && result) {

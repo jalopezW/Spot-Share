@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Car, MapPin, Clock, User, Phone, MessageCircle, X, Send } from "lucide-react";
+import { useLocation } from "@/components/contexts/LocationContext";
 
 interface Message {
   sender: "buyer" | "seller";
@@ -11,6 +12,7 @@ interface Message {
 
 export default function SellerEtaPage() {
   const mapRef = useRef<HTMLDivElement>(null);
+  const { userLocation } = useLocation();
   const [eta, setEta] = useState<string>("12 mins");
   const [distance, setDistance] = useState<number>(2.3);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
@@ -41,6 +43,9 @@ export default function SellerEtaPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    
+    // Don't initialize map until we have user location
+    if (!userLocation) return;
 
     // Wait for Google Maps to load
     if (window.google && window.google.maps) {
@@ -55,24 +60,25 @@ export default function SellerEtaPage() {
 
       return () => clearInterval(checkInterval);
     }
-  }, []);
+  }, [userLocation]);
 
   const initMap = () => {
     if (
       !mapRef.current ||
       typeof window === "undefined" ||
       !window.google ||
-      !window.google.maps
+      !window.google.maps ||
+      !userLocation
     ) {
       return;
     }
 
     try {
-      // Seller location (parking spot)
-      const sellerLocation = { lat: 33.9697, lng: -118.4187 };
+      // Seller'car location (parking spot)
+      const sellerLocation = { lat: 33.967309, lng: -118.418067 };
 
-      // Buyer's location (simulated - on the way)
-      const buyerLocation = { lat: 33.9757, lng: -118.425 };
+      // Buyer's actual current location from GPS
+      const buyerLocation = { lat: userLocation.lat, lng: userLocation.lng };
 
       // Calculate distance
       const distanceInMiles = calculateDistance(
@@ -255,7 +261,7 @@ export default function SellerEtaPage() {
       bluePulseOverlay.setMap(map);
 
       // Black (seller)marker with hardcoded coordinates
-      const blackMarkerLocation = { lat: 33.968700, lng: -118.418696 };
+      const blackMarkerLocation = { lat: 33.966919, lng: -118.416820 };
       
       new window.google.maps.Marker({
         position: blackMarkerLocation,
@@ -327,22 +333,63 @@ export default function SellerEtaPage() {
       const blackPulseOverlay = new BlackPulseOverlay(new window.google.maps.LatLng(blackMarkerLocation.lat, blackMarkerLocation.lng));
       blackPulseOverlay.setMap(map);
 
-      // Draw route line
-      const routePath = new window.google.maps.Polyline({
-        path: [buyerLocation, sellerLocation],
-        geodesic: true,
-        strokeColor: "#3B82F6",
-        strokeOpacity: 0.8,
-        strokeWeight: 4,
+      // Use Google Maps Directions API for actual route
+      const directionsService = new window.google.maps.DirectionsService();
+      const directionsRenderer = new window.google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: true, // We already have custom markers
+        polylineOptions: {
+          strokeColor: "#3B82F6",
+          strokeOpacity: 0.8,
+          strokeWeight: 4,
+        },
       });
 
-      routePath.setMap(map);
-
-      // Fit bounds to show both markers
-      const bounds = new window.google.maps.LatLngBounds();
-      bounds.extend(sellerLocation);
-      bounds.extend(buyerLocation);
-      map.fitBounds(bounds);
+      // Request directions from buyer location to parking spot
+      directionsService.route(
+        {
+          origin: new window.google.maps.LatLng(buyerLocation.lat, buyerLocation.lng),
+          destination: new window.google.maps.LatLng(sellerLocation.lat, sellerLocation.lng),
+          travelMode: window.google.maps.TravelMode.WALKING,
+        },
+        (result: any, status: any) => {
+          if (status === window.google.maps.DirectionsStatus.OK && result) {
+            directionsRenderer.setDirections(result);
+            
+            // Get route distance and duration from directions result
+            if (result.routes[0]?.legs[0]) {
+              const leg = result.routes[0].legs[0];
+              const distanceInMiles = leg.distance.value / 1609.34; // Convert meters to miles
+              setDistance(distanceInMiles);
+              
+              // Optional: You could also set ETA based on duration
+              // const durationMinutes = Math.ceil(leg.duration.value / 60);
+              
+              console.log("Route calculated:", {
+                distance: leg.distance.text,
+                duration: leg.duration.text
+              });
+            }
+          } else {
+            console.error("Directions request failed:", status);
+            // Fallback to simple line if directions fail
+            const routePath = new window.google.maps.Polyline({
+              path: [buyerLocation, sellerLocation],
+              geodesic: true,
+              strokeColor: "#3B82F6",
+              strokeOpacity: 0.8,
+              strokeWeight: 4,
+            });
+            routePath.setMap(map);
+            
+            // Fit bounds manually as fallback
+            const bounds = new window.google.maps.LatLngBounds();
+            bounds.extend(sellerLocation);
+            bounds.extend(buyerLocation);
+            map.fitBounds(bounds);
+          }
+        }
+      );
     } catch (error) {
       console.error("Error initializing map:", error);
     }
