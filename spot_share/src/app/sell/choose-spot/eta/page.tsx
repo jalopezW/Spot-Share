@@ -15,40 +15,25 @@ export default function EtaPage() {
     { sender: "buyer", text: "On my way!", time: "2:45 PM" },
   ]);
   const [inputText, setInputText] = useState<string>("");
-  const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Check if Google Maps is already loaded
+    // Google Maps is loaded via GoogleMapsProvider, just initialize when ready
     if (window.google && window.google.maps) {
       initMap();
-      return;
+    } else {
+      // Wait a bit for GoogleMapsProvider to load the script
+      const checkInterval = setInterval(() => {
+        if (window.google && window.google.maps) {
+          clearInterval(checkInterval);
+          initMap();
+        }
+      }, 100);
+
+      return () => clearInterval(checkInterval);
     }
-
-    // Load Google Maps script
-    const existingScript = document.querySelector(
-      'script[src*="maps.googleapis.com"]'
-    );
-
-    if (existingScript) {
-      existingScript.addEventListener("load", initMap);
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDGFXb9CP3fA_zFY1DNrATMoC2MkkpXIAQ`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      setMapLoaded(true);
-      initMap();
-    };
-    script.onerror = () => {
-      console.error("Failed to load Google Maps");
-    };
-    document.head.appendChild(script);
   }, []);
 
   const initMap = () => {
@@ -158,12 +143,6 @@ export default function EtaPage() {
           className="w-full h-full"
           style={{ minHeight: "400px" }}
         />
-
-        {!mapLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="text-gray-600">Loading map...</div>
-          </div>
-        )}
 
         {/* Location info badge */}
         <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg px-4 py-2 flex items-center gap-2 z-10">

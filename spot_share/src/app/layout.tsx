@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { AuthProvider } from "@/components/contexts/AuthContext";
+import { LocationProvider } from "@/components/contexts/LocationContext";
+import { GoogleMapsProvider } from "@/components/GoogleMapsProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +32,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gray-50`}
       >
         <AuthProvider>
-          <Navbar />
-          <main className="mx-auto">{children}</main>
+          <LocationProvider>
+            <GoogleMapsProvider>
+              <Navbar />
+              <main className="mx-auto">{children}</main>
 
-          {/* Stripe script - needed for client-side Stripe integration */}
-          <script src="https://js.stripe.com/v3/"></script>
+              {/* Stripe script - needed for client-side Stripe integration */}
+              <script src="https://js.stripe.com/v3/"></script>
+            </GoogleMapsProvider>
+          </LocationProvider>
         </AuthProvider>
       </body>
     </html>

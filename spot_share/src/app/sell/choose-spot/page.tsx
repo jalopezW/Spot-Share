@@ -5,7 +5,7 @@ import { MapPin, Edit3, Check } from "lucide-react";
 import Modal from "@/components/items/Modal";
 import SwipeToConfirm from "@/components/ui/swiper";
 import { toast } from "sonner";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, Marker, OverlayView } from "@react-google-maps/api";
 import {
   getColor,
   getMake,
@@ -17,6 +17,7 @@ import {
 import { loggedInUserID, useAuthentication } from "../../../../authService";
 import { auth } from "../../../../firebaseConfig";
 import { useAuth } from "@/components/contexts/AuthContext";
+import { useLocation } from "@/components/contexts/LocationContext";
 
 // Theme tokens inspired by the screenshot
 const theme = {
@@ -31,13 +32,11 @@ const theme = {
  */
 interface InteractiveMapProps {
   markerPosition: { lat: number; lng: number } | null;
+  userLocation: { lat: number; lng: number } | null;
   onMapClick: (lat: number, lng: number) => void;
 }
 
-function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
-  // Load API key from environment variable
-  const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
-
+function InteractiveMap({ markerPosition, userLocation, onMapClick }: InteractiveMapProps) {
   // Map center - same as buy page (LMU campus area)
   const center = { lat: 33.966787, lng: -118.417631 };
   const [zoom] = useState(19);
@@ -67,26 +66,69 @@ function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
   };
 
   return (
-    <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
-      <GoogleMap
-        mapContainerStyle={mapContainerStyle}
-        center={center}
-        options={mapOptions}
-        onClick={handleMapClick}
-      >
-        {/* Show marker at selected position */}
-        {markerPosition && (
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      center={center}
+      options={mapOptions}
+      onClick={handleMapClick}
+    >
+      {/* User location marker - Blue with pulse */}
+      {userLocation && (
+        <>
+          {/* Main blue circle marker */}
           <Marker
-            position={markerPosition}
-            animation={google.maps.Animation.DROP}
+            position={userLocation}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#0C76F2",
+              fillOpacity: 1,
+              strokeColor: "#FFFFFF",
+              strokeWeight: 2,
+            }}
           />
-        )}
-      </GoogleMap>
-    </LoadScript>
+          {/* Pulse overlay on user location */}
+          <OverlayView
+            position={userLocation}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+          >
+            <div
+              style={{
+                position: "absolute",
+                transform: "translate(-50%, -50%)",
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                className="pulse-ring"
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  background: "#59A3FF",
+                  opacity: 0.6,
+                }}
+              />
+            </div>
+          </OverlayView>
+        </>
+      )}
+
+      {/* Show marker at selected position */}
+      {markerPosition && (
+        <Marker
+          position={markerPosition}
+          animation={google.maps.Animation.DROP}
+        />
+      )}
+    </GoogleMap>
   );
 }
 
 export default function ChooseSpot() {
+  // Get user location from context
+  const { userLocation } = useLocation();
+
   const [address, setAddress] = useState("Hannon Parking lot, LMU");
   const [coords, setCoords] = useState({ lat: 33.966787, lng: -118.417631 });
   const [markerPosition, setMarkerPosition] = useState<{
@@ -126,6 +168,7 @@ export default function ChooseSpot() {
           {/* Interactive Google Map - same as buy page */}
           <InteractiveMap
             markerPosition={markerPosition}
+            userLocation={userLocation}
             onMapClick={handleMapClick}
           />
         </div>

@@ -14,11 +14,11 @@ import {
 } from "lucide-react";
 import {
   GoogleMap,
-  LoadScript,
   Marker,
   OverlayView,
 } from "@react-google-maps/api";
 import { useAuth } from "@/components/contexts/AuthContext";
+import { useLocation } from "@/components/contexts/LocationContext";
 import { getSpots, getUserInfo } from "../../../../databaseService";
 import { auth } from "../../../../firebaseConfig";
 import { loggedInUserID } from "../../../../authService";
@@ -91,8 +91,10 @@ import { loggedInUserID } from "../../../../authService";
  * GOOGLE MAPS COMPONENT WITH PARKING SPOTS
  */
 function InteractiveGoogleMap() {
-  const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
   const [zoom] = useState(18.9);
+  
+  // Get user location from context
+  const { userLocation } = useLocation();
 
   const mapContainerStyle = {
     width: "100%",
@@ -127,57 +129,93 @@ function InteractiveGoogleMap() {
   }, []);
 
   return (
-    <LoadScript
-      googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-      id="google-maps-script"
-      preventGoogleFontsLoading
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      center={{ lat: 33.966787, lng: -118.417631 }}
+      options={mapOptions}
     >
-      <GoogleMap
-        mapContainerStyle={mapContainerStyle}
-        center={{ lat: 33.966787, lng: -118.417631 }}
-        options={mapOptions}
-      >
-        {/* Dynamically render markers for all parking spots from data */}
-        {parkingSpots.map((spot) => (
-          <React.Fragment key={spot.id}>
-            <Marker
-              position={{ lat: spot.Lat, lng: spot.Long }}
-              icon={{
-                url: spot.available
-                  ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Available = green
-                  : "http://maps.google.com/mapfiles/ms/icons/red-dot.png", // Occupied = red
+      {/* User location marker - Blue with pulse */}
+      {userLocation && (
+        <>
+          {/* Main blue circle marker */}
+          <Marker
+            position={userLocation}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#0C76F2",
+              fillOpacity: 1,
+              strokeColor: "#FFFFFF",
+              strokeWeight: 2,
+            }}
+          />
+          {/* Pulse overlay on user location */}
+          <OverlayView
+            position={userLocation}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+          >
+            <div
+              style={{
+                position: "absolute",
+                transform: "translate(-50%, -50%)",
+                pointerEvents: "none",
               }}
-            />
-            {/* Time display below the pin using OverlayView */}
-            <OverlayView
-              position={{ lat: spot.Lat, lng: spot.Long }}
-              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
             >
               <div
+                className="pulse-ring"
                 style={{
-                  position: "absolute",
-                  transform: "translate(-50%, 10px)",
-                  backgroundColor: "rgba(0, 0, 0, 0.8)",
-                  color: "white",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  whiteSpace: "nowrap",
-                  pointerEvents: "none",
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  background: "#59A3FF",
+                  opacity: 0.6,
                 }}
-              >
-                {spot.Time.toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                })}
-              </div>
-            </OverlayView>
-          </React.Fragment>
-        ))}
-      </GoogleMap>
-    </LoadScript>
+              />
+            </div>
+          </OverlayView>
+        </>
+      )}
+
+      {/* Dynamically render markers for all parking spots from data */}
+      {parkingSpots.map((spot) => (
+        <React.Fragment key={spot.id}>
+          <Marker
+            position={{ lat: spot.Lat, lng: spot.Long }}
+            icon={{
+              url: spot.available
+                ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Available = green
+                : "http://maps.google.com/mapfiles/ms/icons/red-dot.png", // Occupied = red
+            }}
+          />
+          {/* Time display below the pin using OverlayView */}
+          <OverlayView
+            position={{ lat: spot.Lat, lng: spot.Long }}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+          >
+            <div
+              style={{
+                position: "absolute",
+                transform: "translate(-50%, 10px)",
+                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                color: "white",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                whiteSpace: "nowrap",
+                pointerEvents: "none",
+              }}
+            >
+              {spot.Time.toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })}
+            </div>
+          </OverlayView>
+        </React.Fragment>
+      ))}
+    </GoogleMap>
   );
 }
 

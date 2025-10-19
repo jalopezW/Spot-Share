@@ -1,32 +1,25 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { MapPin, DollarSign } from "lucide-react";
 import Link from "next/link";
 import {
   GoogleMap,
-  LoadScript,
   Marker,
   OverlayView,
 } from "@react-google-maps/api";
-import { getUserLocation } from "@/utils/location";
+import { useLocation } from "@/components/contexts/LocationContext";
 
 // Map Section Component with Interactive Marking
 const MapSection = () => {
-  // Load API key from environment variable
-  const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
+  // Get user location from context
+  const { userLocation } = useLocation();
 
   // Initial map center coordinates LMU
   const [center] = useState({ lat: 33.9687, lng: -118.4189 });
 
   // Map zoom level (1-20, higher = more zoomed in)
   const [zoom] = useState(17);
-
-  // Store user's current location
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
 
   // Store marked locations
   const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
@@ -36,21 +29,6 @@ const MapSection = () => {
     lat: number;
     lng: number;
   } | null>(null);
-
-  // Fetch user location when component mounts
-  useEffect(() => {
-    const fetchUserLocation = async () => {
-      try {
-        const location = await getUserLocation();
-        setUserLocation(location);
-        console.log("User location:", location);
-      } catch (error) {
-        console.error("Error getting user location:", error);
-      }
-    };
-
-    fetchUserLocation();
-  }, []);
 
   // Map container styling
   const mapContainerStyle = {
@@ -90,72 +68,64 @@ const MapSection = () => {
   return (
     <div className="h-screen relative">
       {/* Interactive Google Map */}
-      <LoadScript
-        googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-        id="google-maps-script"
-        preventGoogleFontsLoading
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={center}
+        options={mapOptions}
+        onClick={onMapClick}
       >
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={center}
-          options={mapOptions}
-          onClick={onMapClick}
-        >
-          {/* User location marker - Blue */}
-          {userLocation && (
-            <>
-              {/* Pulse overlay on user location */}
-              <OverlayView
-                position={userLocation}
-                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+        {/* User location marker - Blue with pulse */}
+        {userLocation && (
+          <>
+            {/* Main blue circle marker */}
+            <Marker
+              position={userLocation}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#0C76F2",
+                fillOpacity: 1,
+                strokeColor: "#FFFFFF",
+                strokeWeight: 2,
+              }}
+            />
+            {/* Pulse overlay on user location */}
+            <OverlayView
+              position={userLocation}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  transform: "translate(-50%, -50%)",
+                  pointerEvents: "none",
+                }}
               >
                 <div
+                  className="pulse-ring"
                   style={{
-                    position: "absolute",
-                    transform: "translate(-50%, -50%)",
-                    pointerEvents: "none",
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    background: "#59A3FF",
+                    opacity: 0.6,
                   }}
-                >
-                  <div
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      background: "#0C76F2",
-                      borderRadius: "50%",
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      className="pulse-ring"
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        position: "absolute",
-                        top: "0",
-                        left: "0",
-                        borderRadius: "50%",
-                        background: "#59A3FF",
-                        opacity: 0.6,
-                      }}
-                    />
-                  </div>
-                </div>
-              </OverlayView>
-            </>
-          )}
+                />
+              </div>
+            </OverlayView>
+          </>
+        )}
 
-          {/* Render all clicked markers */}
-          {markers.map((marker, index) => (
-            <Marker
-              key={index}
-              position={{ lat: marker.lat, lng: marker.lng }}
-            />
-          ))}
-        </GoogleMap>
-      </LoadScript>
+        {/* Render all clicked markers */}
+        {markers.map((marker, index) => (
+          <Marker
+            key={index}
+            position={{ lat: marker.lat, lng: marker.lng }}
+          />
+        ))}
+      </GoogleMap>
 
-      {/* Dark overlay for better text contrast */}
-      <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+      
 
       {/* Center content overlay */}
     </div>
