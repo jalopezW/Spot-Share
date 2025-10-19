@@ -12,11 +12,7 @@ import {
   ArrowLeft,
   CreditCard,
 } from "lucide-react";
-import {
-  GoogleMap,
-  Marker,
-  OverlayView,
-} from "@react-google-maps/api";
+import { GoogleMap, Marker, OverlayView } from "@react-google-maps/api";
 import { useAuth } from "@/components/contexts/AuthContext";
 import { useLocation } from "@/components/contexts/LocationContext";
 import { getSpots, getUserInfo } from "../../../../databaseService";
@@ -92,7 +88,7 @@ import { loggedInUserID } from "../../../../authService";
  */
 function InteractiveGoogleMap() {
   const [zoom] = useState(18.9);
-  
+
   // Get user location from context
   const { userLocation } = useLocation();
 
@@ -224,6 +220,7 @@ export default function ChooseSpotPage() {
   const [parkingSpots, setParkingSpots] = useState<any[]>([]);
   const [userInfo, setUserInfo] = useState<any>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [chosenSpot, setChosenSpot] = useState<any | null>(null);
 
   const [selectedSpot, setSelectedSpot] = useState<any | null>(null);
 
@@ -384,30 +381,33 @@ export default function ChooseSpotPage() {
                     {/* Book Now button (only shown for available spots) */}
                     {spot.available && (
                       <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => {
+                          setIsModalOpen(true);
+                          setChosenSpot(spot);
+                        }}
                         className="mt-3 w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition"
                       >
                         Book Now
                       </button>
                     )}
+                    <BookingModal
+                      spot={chosenSpot}
+                      isOpen={isModalOpen}
+                      onClose={() => setIsModalOpen(false)}
+                      distance={spot.distance}
+                      rating={
+                        spot.userInfo
+                          ? spot.userInfo.rating.reduce(
+                              (accumulator: number, currentValue: number) =>
+                                accumulator + currentValue,
+                              0
+                            ) / spot.userInfo.rating.length
+                          : 5
+                      }
+                      sellerInfo={spot.userInfo}
+                      price={4}
+                    />
                   </div>
-                  <BookingModal
-                    spot={spot}
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    distance={spot.distance}
-                    rating={
-                      spot.userInfo
-                        ? spot.userInfo.rating.reduce(
-                            (accumulator: number, currentValue: number) =>
-                              accumulator + currentValue,
-                            0
-                          ) / spot.userInfo.rating.length
-                        : 5
-                    }
-                    sellerInfo={spot.userInfo}
-                    price={4}
-                  />
                 </div>
               ))}
             </div>
