@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { MapPin, DollarSign, Star, Navigation, X, Clock } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { MapPin, DollarSign, Star, Navigation, X, Clock, ArrowLeft, CreditCard } from "lucide-react";
 
 /**
  * PARKING SPOTS DATA
@@ -43,28 +43,28 @@ const parkingSpots = [
 ];
 
 /**
- * BOOKING MODAL COMPONENT
- * Displays a modal with booking details and hours selection
- * Shows total price calculation based on hours selected
+ * STRIPE PAYMENT FORM COMPONENT
  */
-function BookingModal({
-  spot,
-  isOpen,
-  onClose,
+function StripePaymentForm({
+  amount,
+  spotName,
+  hours,
+  spotId,
+  onBack,
 }: {
-  spot: (typeof parkingSpots)[0];
-  isOpen: boolean;
-  onClose: () => void;
+  amount: number;
+  spotName: string;
+  hours: number;
+  spotId: number;
+  onBack: () => void;
 }) {
-  const [hours, setHours] = useState(1);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Parse the hourly rate from the price string
-  const hourlyRate = parseFloat(spot.price.replace("$", "").replace("/hr", ""));
-  const totalPrice = hourlyRate * hours;
+  const handleStripeCheckout = async () => {
+    setLoading(true);
+    setError("");
 
-  const handleCheckout = async () => {
-    setIsProcessing(true);
     try {
       const res = await fetch("/api/checkout_sessions", {
         method: "POST",
@@ -72,9 +72,9 @@ function BookingModal({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          spotId: spot.id,
-          spotName: spot.name,
-          amount: Math.round(totalPrice * 100), // Convert to cents
+          spotId: spotId,
+          spotName: spotName,
+          amount: Math.round(amount * 100), // Convert to cents
           hours: hours,
         }),
       });
@@ -86,30 +86,132 @@ function BookingModal({
       }
 
       if (data.url) {
+        // Redirect to Stripe Checkout
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL received");
       }
-    } catch (error) {
-      console.error("Booking error:", error);
-      alert("Failed to start checkout. Please try again.");
-      setIsProcessing(false);
+    } catch (err) {
+      console.error("Stripe checkout error:", err);
+      setError("Failed to initialize payment. Please try again.");
+      setLoading(false);
     }
+  };
+
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to booking details
+      </button>
+
+      <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+        <h3 className="font-semibold text-gray-800 mb-3">Payment Summary</h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Location:</span>
+            <span className="font-semibold text-gray-800">{spotName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Duration:</span>
+            <span className="font-semibold text-gray-800">{hours} hour{hours > 1 ? "s" : ""}</span>
+          </div>
+          <div className="border-t border-blue-200 pt-2 mt-2">
+            <div className="flex justify-between">
+              <span className="font-semibold text-gray-800">Total Amount:</span>
+              <span className="text-xl font-bold text-blue-600">${amount.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border-2 border-blue-200">
+        <div className="flex items-center justify-center mb-4">
+          <CreditCard className="w-12 h-12 text-blue-600" />
+        </div>
+        <h3 className="text-center font-bold text-gray-800 mb-2">Secure Payment via Stripe</h3>
+        <p className="text-center text-sm text-gray-600 mb-4">
+          You'll be redirected to Stripe's secure checkout page to complete your payment
+        </p>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      )}
+
+      <button
+        onClick={handleStripeCheckout}
+        disabled={loading}
+        className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? (
+          <span className="flex items-center justify-center gap-2">
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Redirecting to Stripe...
+          </span>
+        ) : (
+          `Proceed to Stripe Checkout - $${amount.toFixed(2)}`
+        )}
+      </button>
+
+      <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-500">
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+        </svg>
+        <span>Secured by Stripe • SSL Encrypted</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * BOOKING MODAL COMPONENT
+ */
+function BookingModal({
+  spot,
+  isOpen,
+  onClose,
+}: {
+  spot: (typeof parkingSpots)[0];
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [hours, setHours] = useState(1);
+  const [showPayment, setShowPayment] = useState(false);
+
+  const hourlyRate = parseFloat(spot.price.replace("$", "").replace("/hr", ""));
+  const totalPrice = hourlyRate * hours;
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowPayment(false);
+      setHours(1);
+    }
+  }, [isOpen]);
+
+  const handleProceedToPayment = () => {
+    setShowPayment(true);
+  };
+
+  const handleBackToBooking = () => {
+    setShowPayment(false);
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Light Backdrop - semi-transparent white instead of dark */}
       <div
         className="absolute inset-0 bg-white/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal Content */}
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto border-2 border-gray-200">
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors z-10"
@@ -117,118 +219,114 @@ function BookingModal({
           <X className="w-5 h-5 text-gray-600" />
         </button>
 
-        {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-2xl">
-          <h2 className="text-2xl font-bold mb-2">Book Parking Spot</h2>
-          <p className="text-blue-100 text-sm">Complete your reservation</p>
+          <h2 className="text-2xl font-bold mb-2">
+            {showPayment ? "Complete Payment" : "Book Parking Spot"}
+          </h2>
+          <p className="text-blue-100 text-sm">
+            {showPayment ? "Secure checkout with Stripe" : "Complete your reservation"}
+          </p>
         </div>
 
-        {/* Spot Details */}
         <div className="p-6">
-          {/* Spot Name and Badge */}
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="font-bold text-xl text-gray-800">{spot.name}</h3>
-              <p className="text-gray-600 text-sm flex items-center gap-1 mt-1">
-                <MapPin className="w-4 h-4" />
-                {spot.address}
-              </p>
-            </div>
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
-              Available
-            </span>
-          </div>
-
-          {/* Spot Info Grid */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-              <p className="text-xs text-gray-600">Rate</p>
-              <p className="font-bold text-gray-800">{spot.price}</p>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-3 text-center">
-              <Navigation className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-              <p className="text-xs text-gray-600">Distance</p>
-              <p className="font-bold text-gray-800">{spot.distance}</p>
-            </div>
-            <div className="bg-yellow-50 rounded-lg p-3 text-center">
-              <Star className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
-              <p className="text-xs text-gray-600">Rating</p>
-              <p className="font-bold text-gray-800">{spot.rating}</p>
-            </div>
-          </div>
-
-          {/* Hours Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Select Duration
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {[1, 2, 3, 4, 6, 8, 12, 24].map((h) => (
-                <button
-                  key={h}
-                  onClick={() => setHours(h)}
-                  className={`py-3 px-2 rounded-lg font-semibold text-sm transition-all ${
-                    hours === h
-                      ? "bg-blue-600 text-white shadow-lg scale-105"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {h}h
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Price Breakdown */}
-          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 mb-6 border border-blue-100">
-            <div className="flex justify-between mb-2">
-              <span className="text-gray-600">Hourly Rate:</span>
-              <span className="font-semibold">${hourlyRate.toFixed(2)}/hr</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span className="text-gray-600">Duration:</span>
-              <span className="font-semibold">{hours} hour{hours > 1 ? "s" : ""}</span>
-            </div>
-            <div className="border-t border-blue-200 pt-2 mt-2">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold text-gray-800">Total:</span>
-                <span className="text-2xl font-bold text-blue-600">
-                  ${totalPrice.toFixed(2)}
+          {!showPayment ? (
+            <>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-bold text-xl text-gray-800">{spot.name}</h3>
+                  <p className="text-gray-600 text-sm flex items-center gap-1 mt-1">
+                    <MapPin className="w-4 h-4" />
+                    {spot.address}
+                  </p>
+                </div>
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                  Available
                 </span>
               </div>
-            </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCheckout}
-              disabled={isProcessing}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isProcessing ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Processing...
-                </span>
-              ) : (
-                `Proceed to Payment`
-              )}
-            </button>
-          </div>
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                  <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                  <p className="text-xs text-gray-600">Rate</p>
+                  <p className="font-bold text-gray-800">{spot.price}</p>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-3 text-center">
+                  <Navigation className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                  <p className="text-xs text-gray-600">Distance</p>
+                  <p className="font-bold text-gray-800">{spot.distance}</p>
+                </div>
+                <div className="bg-yellow-50 rounded-lg p-3 text-center">
+                  <Star className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
+                  <p className="text-xs text-gray-600">Rating</p>
+                  <p className="font-bold text-gray-800">{spot.rating}</p>
+                </div>
+              </div>
 
-          {/* Info Note */}
-          <p className="text-xs text-gray-500 text-center mt-4">
-            You'll be redirected to Stripe's secure payment page
-          </p>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Select Duration
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4, 6, 8, 12, 24].map((h) => (
+                    <button
+                      key={h}
+                      onClick={() => setHours(h)}
+                      className={`py-3 px-2 rounded-lg font-semibold text-sm transition-all ${
+                        hours === h
+                          ? "bg-blue-600 text-white shadow-lg scale-105"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {h}h
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 mb-6 border border-blue-100">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-600">Hourly Rate:</span>
+                  <span className="font-semibold">${hourlyRate.toFixed(2)}/hr</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-semibold">{hours} hour{hours > 1 ? "s" : ""}</span>
+                </div>
+                <div className="border-t border-blue-200 pt-2 mt-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold text-gray-800">Total:</span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      ${totalPrice.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={onClose}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleProceedToPayment}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
+                >
+                  Proceed to Payment
+                </button>
+              </div>
+            </>
+          ) : (
+            <StripePaymentForm
+              amount={totalPrice}
+              spotName={spot.name}
+              hours={hours}
+              spotId={spot.id}
+              onBack={handleBackToBooking}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -290,7 +388,6 @@ function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
         )}
       </div>
 
-      {/* Booking Modal */}
       <BookingModal
         spot={spot}
         isOpen={isModalOpen}
@@ -301,37 +398,76 @@ function ParkingSpotCard({ spot }: { spot: (typeof parkingSpots)[0] }) {
 }
 
 /**
- * INTERACTIVE MAP PLACEHOLDER COMPONENT
- * Static map placeholder - replace with actual Google Maps implementation in your project
+ * GOOGLE MAPS COMPONENT WITH PARKING SPOTS
  */
-function InteractiveMap() {
+function InteractiveGoogleMap() {
+  const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
+  const [center] = useState({ lat: 33.9687, lng: -118.4189 });
+  const [zoom] = useState(17);
+  const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
+
+  const mapContainerStyle = {
+    width: "100%",
+    height: "100%",
+  };
+
+  const mapOptions = {
+    zoom: zoom,
+    disableDefaultUI: false,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+  };
+
+  const onMapClick = useCallback((event: any) => {
+    if (event.latLng) {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+
+      setMarkers((current) => [...current, { lat, lng }]);
+      console.log("Marked location:", { lat, lng });
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("lastMarkedLocation", JSON.stringify({ lat, lng }));
+      }
+    }
+  }, []);
+
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-blue-100 to-blue-50">
-      {/* Map Placeholder */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-          <MapPin className="w-24 h-24 text-blue-600 mx-auto mb-4 animate-bounce" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Interactive Map</h2>
-          <p className="text-gray-600">Parking spots near LMU Campus</p>
-        </div>
+    <div className="h-full relative">
+      <div style={{ width: '100%', height: '100%' }}>
+        <iframe
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          loading="lazy"
+          allowFullScreen
+          src={`https://www.google.com/maps/embed/v1/view?key=${GOOGLE_MAPS_API_KEY}&center=33.9687,-118.4189&zoom=17`}
+        />
       </div>
       
-      {/* Animated Location Markers */}
       {parkingSpots.map((spot, index) => (
         <div
           key={spot.id}
-          className="absolute animate-pulse"
+          className="absolute"
           style={{
-            top: `${30 + index * 20}%`,
-            left: `${25 + index * 25}%`,
-            animationDelay: `${index * 0.3}s`,
+            top: `${35 + index * 18}%`,
+            left: `${30 + index * 20}%`,
           }}
         >
-          <div
-            className={`w-4 h-4 rounded-full shadow-lg ${
-              spot.available ? "bg-green-500" : "bg-red-500"
-            }`}
-          />
+          <div className="relative group">
+            <div
+              className={`w-6 h-6 rounded-full shadow-lg animate-pulse border-2 border-white ${
+                spot.available ? "bg-green-500" : "bg-red-500"
+              }`}
+              style={{ animationDelay: `${index * 0.3}s` }}
+            />
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+              <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                {spot.name}
+              </div>
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -345,10 +481,12 @@ export default function ChooseSpotPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-20 h-screen flex">
+        {/* Left Side: Google Map (60%) */}
         <div className="w-3/5 h-full">
-          <InteractiveMap />
+          <InteractiveGoogleMap />
         </div>
 
+        {/* Right Side: Parking Spot List (40%) */}
         <div className="w-2/5 h-full bg-white shadow-xl overflow-y-auto">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
