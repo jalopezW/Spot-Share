@@ -232,8 +232,15 @@ export async function getSpots(): Promise<any> {
   }
 }
 
-function distance(Lat1: number, Lat2: number, Long1: number, Long2: number) {
-  const dlat = Lat2 - Lat1;
-  const dlong = Long2 - Long1;
-  return Math.sqrt(dlat * dlat + dlong * dlong);
+export async function setAvailablity(
+  userID: string | undefined,
+  status: boolean
+) {
+  if (userID != undefined) {
+    const docRef = doc(db, "spots", userID);
+
+    await updateDoc(docRef, {
+      available: status,
+    });
+  }
 }

@@ -21,6 +21,7 @@ import {
   BadgeCheck,
   User,
 } from "lucide-react";
+import { carBrands } from "../../carBrands";
 
 /* -----------------------------
    Navbar
@@ -334,3 +335,147 @@ function LabeledInput({
     </div>
   );
 }
+
+// export default function CarBrandDropdown({
+//   changeMake,
+//   changeModel,
+// }: {
+//   changeMake: any;
+//   changeModel: any;
+// }) {
+//   const [selectedBrand, setSelectedBrand] = useState<string>("");
+//   const [selectedModel, setSelectedModel] = useState<string>("");
+
+//   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+//     setSelectedBrand(e.target.value);
+//     setSelectedModel(""); // Reset model when brand changes
+//     changeMake(e.target.value);
+//   };
+
+//   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+//     setSelectedModel(e.target.value);
+//     changeModel(e.target.value);
+//   };
+
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     console.log("Selected:", { brand: selectedBrand, model: selectedModel });
+//     // Add your submit logic here
+//   };
+
+//   return (
+//     <div style={{ maxWidth: "500px", margin: "50px auto", padding: "20px" }}>
+//       <h2>Select Your Vehicle</h2>
+
+//       <form onSubmit={handleSubmit}>
+//         {/* Brand Dropdown */}
+//         <div style={{ marginBottom: "20px" }}>
+//           <label
+//             htmlFor="brand"
+//             style={{
+//               display: "block",
+//               marginBottom: "8px",
+//               fontWeight: "bold",
+//             }}
+//           >
+//             Brand
+//           </label>
+//           <select
+//             id="brand"
+//             value={selectedBrand}
+//             onChange={handleBrandChange}
+//             required
+//             style={{
+//               width: "100%",
+//               padding: "10px",
+//               fontSize: "16px",
+//               borderRadius: "4px",
+//               border: "1px solid #ccc",
+//             }}
+//           >
+//             <option value="">Select a brand...</option>
+//             {Object.keys(carBrands)
+//               .sort()
+//               .map((brand) => (
+//                 <option key={brand} value={brand}>
+//                   {brand}
+//                 </option>
+//               ))}
+//           </select>
+//         </div>
+
+//         {/* Model Dropdown - Only shows when brand is selected */}
+//         {selectedBrand && (
+//           <div style={{ marginBottom: "20px" }}>
+//             <label
+//               htmlFor="model"
+//               style={{
+//                 display: "block",
+//                 marginBottom: "8px",
+//                 fontWeight: "bold",
+//               }}
+//             >
+//               Model
+//             </label>
+//             <select
+//               id="model"
+//               value={selectedModel}
+//               onChange={handleModelChange}
+//               required
+//               style={{
+//                 width: "100%",
+//                 padding: "10px",
+//                 fontSize: "16px",
+//                 borderRadius: "4px",
+//                 border: "1px solid #ccc",
+//               }}
+//             >
+//               <option value="">Select a model...</option>
+//               {carBrands[selectedBrand].map((model) => (
+//                 <option key={model} value={model}>
+//                   {model}
+//                 </option>
+//               ))}
+//             </select>
+//           </div>
+//         )}
+
+//         {/* Display Selection */}
+//         {selectedBrand && selectedModel && (
+//           <div
+//             style={{
+//               padding: "15px",
+//               backgroundColor: "#f0f0f0",
+//               borderRadius: "4px",
+//               marginBottom: "20px",
+//             }}
+//           >
+//             <p style={{ margin: 0 }}>
+//               <strong>Selected Vehicle:</strong> {selectedBrand} {selectedModel}
+//             </p>
+//           </div>
+//         )}
+
+//         {/* Submit Button */}
+//         <button
+//           type="submit"
+//           disabled={!selectedBrand || !selectedModel}
+//           style={{
+//             width: "100%",
+//             padding: "12px",
+//             fontSize: "16px",
+//             fontWeight: "bold",
+//             backgroundColor:
+//               selectedBrand && selectedModel ? "#007bff" : "#ccc",
+//             color: "white",
+//             border: "none",
+//             borderRadius: "4px",
+//             cursor: selectedBrand && selectedModel ? "pointer" : "not-allowed",
+//           }}
+//         >
+//           Submit
+//         </button>
+//       </form>
+//     </div>
+//   );
+// }
