@@ -11,14 +11,7 @@ export function BookingModal({
   sellerInfo,
   price,
 }: {
-  spot: {
-    lat: number;
-    long: number;
-    price: number;
-    available: boolean;
-    time: Date;
-    userId: string;
-  };
+  spot: any;
   isOpen: boolean;
   onClose: () => void;
   distance?: string; // e.g. "0.3 mi"
@@ -143,8 +136,8 @@ export function BookingModal({
               amount={totalPrice}
               spot={spot}
               hours={hours}
-              spotId={spot.id}
               onBack={handleBackToBooking}
+              sellerInfo={sellerInfo}
             />
           )}
         </div>

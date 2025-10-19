@@ -6,28 +6,22 @@ import CheckoutPage from "@/components/CheckoutPage";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
-import {
-  ArrowLeft,
-  Clock,
-  CreditCard,
-  DollarSign,
-  MapPin,
-  Navigation,
-  Star,
-  X,
-} from "lucide-react";
+import { ArrowLeft, CreditCard } from "lucide-react";
 
 export function StripePaymentForm({
   amount,
-  spotName,
+  spot,
   hours,
-  spotId,
   onBack,
+  sellerInfo,
 }: {
   amount: number;
-  spotName: string;
+  spot: any;
+  sellerInfo?: {
+    name?: string;
+    rating?: number[] | number;
+  } | null;
   hours: number;
-  spotId: number;
   onBack: () => void;
 }) {
   const [loading, setLoading] = useState(false);
@@ -71,12 +65,8 @@ export function StripePaymentForm({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Location:</span>
-                <span className="font-semibold text-gray-800">{spotName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Duration:</span>
                 <span className="font-semibold text-gray-800">
-                  {hours} hour{hours > 1 ? "s" : ""}
+                  Hannon Parking Lot
                 </span>
               </div>
               <div className="border-t border-blue-200 pt-2 mt-2">
@@ -144,7 +134,7 @@ export function StripePaymentForm({
             },
           }}
         >
-          <CheckoutPage amount={5} />
+          <CheckoutPage amount={5} spot={spot} sellerInfo={sellerInfo} />
         </Elements>
       )}
     </div>
