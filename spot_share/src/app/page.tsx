@@ -46,24 +46,24 @@ const MapSection = () => {
   };
 
   // Handle map click to add marker
-  const onMapClick = useCallback((event: google.maps.MapMouseEvent) => {
-    if (event.latLng) {
-      const lat = event.latLng.lat();
-      const lng = event.latLng.lng();
+  // const onMapClick = useCallback((event: google.maps.MapMouseEvent) => {
+  //   if (event.latLng) {
+  //     const lat = event.latLng.lat();
+  //     const lng = event.latLng.lng();
 
-      // Add new marker
-      setMarkers((current) => [...current, { lat, lng }]);
+  //     // Add new marker
+  //     setMarkers((current) => [...current, { lat, lng }]);
 
-      // Store coordinates for use in other pages
-      setLastClickedCoords({ lat, lng });
+  //     // Store coordinates for use in other pages
+  //     setLastClickedCoords({ lat, lng });
 
-      // Log coordinates (you can save these to localStorage, state management, or database)
-      console.log("Marked location:", { lat, lng });
+  //     // Log coordinates (you can save these to localStorage, state management, or database)
+  //     console.log("Marked location:", { lat, lng });
 
-      // Example: Save to localStorage for use on other pages
-      localStorage.setItem("lastMarkedLocation", JSON.stringify({ lat, lng }));
-    }
-  }, []);
+  //     // Example: Save to localStorage for use on other pages
+  //     localStorage.setItem("lastMarkedLocation", JSON.stringify({ lat, lng }));
+  //   }
+  // }, []);
 
   return (
     <div className="h-screen relative">
@@ -72,7 +72,7 @@ const MapSection = () => {
         mapContainerStyle={mapContainerStyle}
         center={center}
         options={mapOptions}
-        onClick={onMapClick}
+        // onClick={onMapClick}
       >
         {/* User location marker - Blue with pulse */}
         {userLocation && (

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send, Navigation } from "lucide-react";
+import { useLocation } from "@/components/contexts/LocationContext";
 
 interface Message {
   sender: "buyer" | "seller";
@@ -16,9 +17,29 @@ export default function EtaPage() {
   ]);
   const [inputText, setInputText] = useState<string>("");
   const mapRef = useRef<HTMLDivElement>(null);
+  const [distance, setDistance] = useState<number>(0);
+  
+  // Get actual user location from context
+  const { userLocation } = useLocation();
+  
+  // Calculate distance between two points (Haversine formula)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    
+    // Don't initialize map until we have user location
+    if (!userLocation) return;
 
     // Google Maps is loaded via GoogleMapsProvider, just initialize when ready
     if (window.google && window.google.maps) {
@@ -34,14 +55,15 @@ export default function EtaPage() {
 
       return () => clearInterval(checkInterval);
     }
-  }, []);
+  }, [userLocation]);
 
   const initMap = () => {
     if (
       !mapRef.current ||
       typeof window === "undefined" ||
       !window.google ||
-      !window.google.maps
+      !window.google.maps ||
+      !userLocation
     ) {
       console.log("Map not ready");
       return;
@@ -51,8 +73,17 @@ export default function EtaPage() {
       // LMU Parking Lot A coordinates
       const parkingLot = { lat: 33.9697, lng: -118.4187 };
 
-      // Buyer's current location (simulated - 2.3 miles away)
-      const buyerLocation = { lat: 33.985, lng: -118.445 };
+      // Buyer's actual current location from GPS
+      const buyerLocation = { lat: userLocation.lat, lng: userLocation.lng };
+      
+      // Calculate actual distance
+      const distanceInMiles = calculateDistance(
+        buyerLocation.lat,
+        buyerLocation.lng,
+        parkingLot.lat,
+        parkingLot.lng
+      );
+      setDistance(distanceInMiles);
 
       const map = new window.google.maps.Map(mapRef.current, {
         center: parkingLot,
@@ -78,20 +109,76 @@ export default function EtaPage() {
         },
       });
 
-      // Buyer location marker
+      // Buyer location marker - same style as other pages
       new window.google.maps.Marker({
         position: buyerLocation,
         map: map,
         title: "Buyer Location",
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#3B82F6",
+          scale: 8,
+          fillColor: "#0C76F2",
           fillOpacity: 1,
-          strokeColor: "#ffffff",
+          strokeColor: "#FFFFFF",
           strokeWeight: 2,
         },
       });
+
+      // Add pulse overlay for buyer location
+      class PulseOverlay extends window.google.maps.OverlayView {
+        position: google.maps.LatLng;
+        div: HTMLDivElement | null = null;
+
+        constructor(position: google.maps.LatLng) {
+          super();
+          this.position = position;
+        }
+
+        onAdd() {
+          const div = document.createElement('div');
+          div.style.position = 'absolute';
+          div.style.pointerEvents = 'none';
+          
+          const pulse = document.createElement('div');
+          pulse.className = 'pulse-ring';
+          pulse.style.width = '20px';
+          pulse.style.height = '20px';
+          pulse.style.borderRadius = '50%';
+          pulse.style.background = '#59A3FF';
+          pulse.style.opacity = '0.6';
+          
+          div.appendChild(pulse);
+          this.div = div;
+          
+          const panes = this.getPanes();
+          if (panes) {
+            panes.overlayMouseTarget.appendChild(div);
+          }
+        }
+
+        draw() {
+          if (!this.div) return;
+          
+          const overlayProjection = this.getProjection();
+          const position = overlayProjection.fromLatLngToDivPixel(this.position);
+          
+          if (position) {
+            this.div.style.left = position.x + 'px';
+            this.div.style.top = position.y + 'px';
+            this.div.style.transform = 'translate(-50%, -50%)';
+          }
+        }
+
+        onRemove() {
+          if (this.div && this.div.parentNode) {
+            this.div.parentNode.removeChild(this.div);
+            this.div = null;
+          }
+        }
+      }
+
+      const pulseOverlay = new PulseOverlay(new window.google.maps.LatLng(buyerLocation.lat, buyerLocation.lng));
+      pulseOverlay.setMap(map);
 
       // Draw route line
       const routePath = new window.google.maps.Polyline({
@@ -149,7 +236,9 @@ export default function EtaPage() {
           <Navigation className="w-5 h-5 text-blue-500" />
           <div>
             <div className="text-xs text-gray-500">Buyer Location</div>
-            <div className="text-sm font-semibold">2.3 miles away</div>
+            <div className="text-sm font-semibold">
+              {distance > 0 ? `${distance.toFixed(1)} miles away` : 'Calculating...'}
+            </div>
           </div>
         </div>
       </div>
@@ -164,7 +253,9 @@ export default function EtaPage() {
           </div>
           <div className="text-right">
             <div className="text-sm text-gray-500 mb-1">Distance</div>
-            <div className="text-2xl font-semibold text-gray-700">2.3 mi</div>
+            <div className="text-2xl font-semibold text-gray-700">
+              {distance > 0 ? `${distance.toFixed(1)} mi` : '...'}
+            </div>
           </div>
         </div>
       </div>
