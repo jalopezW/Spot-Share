@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Car, MapPin, Clock, User, Phone, MessageCircle, X, Send } from "lucide-react";
+import {
+  Car,
+  MapPin,
+  Clock,
+  User,
+  Phone,
+  MessageCircle,
+  X,
+  Send,
+} from "lucide-react";
 import { useLocation } from "@/components/contexts/LocationContext";
 
 interface Message {
@@ -43,7 +52,7 @@ export default function SellerEtaPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    
+
     // Don't initialize map until we have user location
     if (!userLocation) return;
 
@@ -124,41 +133,41 @@ export default function SellerEtaPage() {
         }
 
         onAdd() {
-          const div = document.createElement('div');
-          div.style.position = 'absolute';
-          div.style.pointerEvents = 'none';
-          div.style.width = '0px';
-          div.style.height = '0px';
-          
+          const div = document.createElement("div");
+          div.style.position = "absolute";
+          div.style.pointerEvents = "none";
+          div.style.width = "0px";
+          div.style.height = "0px";
+
           // First pulse
-          const pulse1 = document.createElement('div');
-          pulse1.className = 'pulse-ring';
-          pulse1.style.position = 'absolute';
-          pulse1.style.left = '-7.5px';
-          pulse1.style.top = '-7.5px';
-          pulse1.style.width = '15px';
-          pulse1.style.height = '15px';
-          pulse1.style.borderRadius = '50%';
-          pulse1.style.background = '#E82A2A';
-          pulse1.style.opacity = '0.6';
+          const pulse1 = document.createElement("div");
+          pulse1.className = "pulse-ring";
+          pulse1.style.position = "absolute";
+          pulse1.style.left = "-7.5px";
+          pulse1.style.top = "-7.5px";
+          pulse1.style.width = "15px";
+          pulse1.style.height = "15px";
+          pulse1.style.borderRadius = "50%";
+          pulse1.style.background = "#E82A2A";
+          pulse1.style.opacity = "0.6";
 
           // Second pulse with delay
-          const pulse2 = document.createElement('div');
-          pulse2.className = 'pulse-ring';
-          pulse2.style.position = 'absolute';
-          pulse2.style.left = '-7.5px';
-          pulse2.style.top = '-7.5px';
-          pulse2.style.width = '15px';
-          pulse2.style.height = '15px';
-          pulse2.style.borderRadius = '50%';
-          pulse2.style.background = '#E82A2A';
-          pulse2.style.opacity = '0.85';
-          pulse2.style.animationDelay = '0.2s';
-          
+          const pulse2 = document.createElement("div");
+          pulse2.className = "pulse-ring";
+          pulse2.style.position = "absolute";
+          pulse2.style.left = "-7.5px";
+          pulse2.style.top = "-7.5px";
+          pulse2.style.width = "15px";
+          pulse2.style.height = "15px";
+          pulse2.style.borderRadius = "50%";
+          pulse2.style.background = "#E82A2A";
+          pulse2.style.opacity = "0.85";
+          pulse2.style.animationDelay = "0.2s";
+
           div.appendChild(pulse1);
           div.appendChild(pulse2);
           this.div = div;
-          
+
           const panes = this.getPanes();
           if (panes) {
             panes.overlayMouseTarget.appendChild(div);
@@ -167,14 +176,16 @@ export default function SellerEtaPage() {
 
         draw() {
           if (!this.div) return;
-          
+
           const overlayProjection = this.getProjection();
-          const position = overlayProjection.fromLatLngToDivPixel(this.position);
-          
+          const position = overlayProjection.fromLatLngToDivPixel(
+            this.position
+          );
+
           if (position) {
-            this.div.style.left = position.x + 'px';
-            this.div.style.top = position.y + 'px';
-            this.div.style.transform = 'translate(-50%, -50%)';
+            this.div.style.left = position.x + "px";
+            this.div.style.top = position.y + "px";
+            this.div.style.transform = "translate(-50%, -50%)";
           }
         }
 
@@ -186,7 +197,9 @@ export default function SellerEtaPage() {
         }
       }
 
-      const redPulseOverlay = new RedPulseOverlay(new window.google.maps.LatLng(sellerLocation.lat, sellerLocation.lng));
+      const redPulseOverlay = new RedPulseOverlay(
+        new window.google.maps.LatLng(sellerLocation.lat, sellerLocation.lng)
+      );
       redPulseOverlay.setMap(map);
 
       // Buyer marker (blue - moving towards spot)
@@ -215,21 +228,21 @@ export default function SellerEtaPage() {
         }
 
         onAdd() {
-          const div = document.createElement('div');
-          div.style.position = 'absolute';
-          div.style.pointerEvents = 'none';
-          
-          const pulse = document.createElement('div');
-          pulse.className = 'pulse-ring';
-          pulse.style.width = '20px';
-          pulse.style.height = '20px';
-          pulse.style.borderRadius = '50%';
-          pulse.style.background = '#59A3FF';
-          pulse.style.opacity = '0.6';
-          
+          const div = document.createElement("div");
+          div.style.position = "absolute";
+          div.style.pointerEvents = "none";
+
+          const pulse = document.createElement("div");
+          pulse.className = "pulse-ring";
+          pulse.style.width = "20px";
+          pulse.style.height = "20px";
+          pulse.style.borderRadius = "50%";
+          pulse.style.background = "#59A3FF";
+          pulse.style.opacity = "0.6";
+
           div.appendChild(pulse);
           this.div = div;
-          
+
           const panes = this.getPanes();
           if (panes) {
             panes.overlayMouseTarget.appendChild(div);
@@ -238,14 +251,16 @@ export default function SellerEtaPage() {
 
         draw() {
           if (!this.div) return;
-          
+
           const overlayProjection = this.getProjection();
-          const position = overlayProjection.fromLatLngToDivPixel(this.position);
-          
+          const position = overlayProjection.fromLatLngToDivPixel(
+            this.position
+          );
+
           if (position) {
-            this.div.style.left = position.x + 'px';
-            this.div.style.top = position.y + 'px';
-            this.div.style.transform = 'translate(-50%, -50%)';
+            this.div.style.left = position.x + "px";
+            this.div.style.top = position.y + "px";
+            this.div.style.transform = "translate(-50%, -50%)";
           }
         }
 
@@ -257,12 +272,14 @@ export default function SellerEtaPage() {
         }
       }
 
-      const bluePulseOverlay = new BluePulseOverlay(new window.google.maps.LatLng(buyerLocation.lat, buyerLocation.lng));
+      const bluePulseOverlay = new BluePulseOverlay(
+        new window.google.maps.LatLng(buyerLocation.lat, buyerLocation.lng)
+      );
       bluePulseOverlay.setMap(map);
 
       // Black (seller)marker with hardcoded coordinates
-      const blackMarkerLocation = { lat: 33.966919, lng: -118.416820 };
-      
+      const blackMarkerLocation = { lat: 33.966919, lng: -118.41682 };
+
       new window.google.maps.Marker({
         position: blackMarkerLocation,
         map: map,
@@ -288,21 +305,21 @@ export default function SellerEtaPage() {
         }
 
         onAdd() {
-          const div = document.createElement('div');
-          div.style.position = 'absolute';
-          div.style.pointerEvents = 'none';
-          
-          const pulse = document.createElement('div');
-          pulse.className = 'pulse-ring';
-          pulse.style.width = '12px';
-          pulse.style.height = '12px';
-          pulse.style.borderRadius = '50%';
-          pulse.style.background = '#333333';
-          pulse.style.opacity = '0.6';
-          
+          const div = document.createElement("div");
+          div.style.position = "absolute";
+          div.style.pointerEvents = "none";
+
+          const pulse = document.createElement("div");
+          pulse.className = "pulse-ring";
+          pulse.style.width = "12px";
+          pulse.style.height = "12px";
+          pulse.style.borderRadius = "50%";
+          pulse.style.background = "#333333";
+          pulse.style.opacity = "0.6";
+
           div.appendChild(pulse);
           this.div = div;
-          
+
           const panes = this.getPanes();
           if (panes) {
             panes.overlayMouseTarget.appendChild(div);
@@ -311,14 +328,16 @@ export default function SellerEtaPage() {
 
         draw() {
           if (!this.div) return;
-          
+
           const overlayProjection = this.getProjection();
-          const position = overlayProjection.fromLatLngToDivPixel(this.position);
-          
+          const position = overlayProjection.fromLatLngToDivPixel(
+            this.position
+          );
+
           if (position) {
-            this.div.style.left = position.x + 'px';
-            this.div.style.top = position.y + 'px';
-            this.div.style.transform = 'translate(-50%, -50%)';
+            this.div.style.left = position.x + "px";
+            this.div.style.top = position.y + "px";
+            this.div.style.transform = "translate(-50%, -50%)";
           }
         }
 
@@ -330,7 +349,12 @@ export default function SellerEtaPage() {
         }
       }
 
-      const blackPulseOverlay = new BlackPulseOverlay(new window.google.maps.LatLng(blackMarkerLocation.lat, blackMarkerLocation.lng));
+      const blackPulseOverlay = new BlackPulseOverlay(
+        new window.google.maps.LatLng(
+          blackMarkerLocation.lat,
+          blackMarkerLocation.lng
+        )
+      );
       blackPulseOverlay.setMap(map);
 
       // Use Google Maps Directions API for actual route
@@ -348,26 +372,32 @@ export default function SellerEtaPage() {
       // Request directions from buyer location to parking spot
       directionsService.route(
         {
-          origin: new window.google.maps.LatLng(buyerLocation.lat, buyerLocation.lng),
-          destination: new window.google.maps.LatLng(sellerLocation.lat, sellerLocation.lng),
+          origin: new window.google.maps.LatLng(
+            buyerLocation.lat,
+            buyerLocation.lng
+          ),
+          destination: new window.google.maps.LatLng(
+            sellerLocation.lat,
+            sellerLocation.lng
+          ),
           travelMode: window.google.maps.TravelMode.WALKING,
         },
         (result: any, status: any) => {
           if (status === window.google.maps.DirectionsStatus.OK && result) {
             directionsRenderer.setDirections(result);
-            
+
             // Get route distance and duration from directions result
             if (result.routes[0]?.legs[0]) {
               const leg = result.routes[0].legs[0];
               const distanceInMiles = leg.distance.value / 1609.34; // Convert meters to miles
               setDistance(distanceInMiles);
-              
+
               // Optional: You could also set ETA based on duration
               // const durationMinutes = Math.ceil(leg.duration.value / 60);
-              
+
               console.log("Route calculated:", {
                 distance: leg.distance.text,
-                duration: leg.duration.text
+                duration: leg.duration.text,
               });
             }
           } else {
@@ -381,7 +411,7 @@ export default function SellerEtaPage() {
               strokeWeight: 4,
             });
             routePath.setMap(map);
-            
+
             // Fit bounds manually as fallback
             const bounds = new window.google.maps.LatLngBounds();
             bounds.extend(sellerLocation);
@@ -397,7 +427,7 @@ export default function SellerEtaPage() {
 
   const handleArrived = () => {
     // Navigate to next page
-    window.location.href = "/sell/choose-spot/waiting-page/eta/confirmed";
+    window.location.href = "/buy/choose-spot/eta/rate";
   };
 
   const handleSendMessage = () => {
@@ -453,7 +483,7 @@ export default function SellerEtaPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Car className="w-6 h-6 text-blue-600" />
-                Parking Spot Information 
+                Parking Spot Information
               </h3>
 
               <div className="space-y-4">
