@@ -70,7 +70,6 @@ export function Navbar() {
         {/* Brand */}
         <Link href="/" className="group inline-flex items-center gap-2">
           <img src={"/SpotShare.png"} className="rounded-xl h-10 w-10" />
-
           <span className="text-xl font-bold tracking-tight text-slate-900">
             Spot <span className="text-blue-600">Share</span>
           </span>
@@ -105,13 +104,15 @@ export function Navbar() {
           </button>
         ) : (
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => logout()}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
+            <Link href="/">
+              <button
+                onClick={() => logout()}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </Link>
           </div>
         )}
       </div>
@@ -129,7 +130,6 @@ export function Navbar() {
           />
         </div>
       </div>
-
       <SignUpModal open={openSignUp} onClose={() => handleSignUp()} />
     </nav>
   );

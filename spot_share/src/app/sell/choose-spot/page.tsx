@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { MapPin, Edit3, Check } from "lucide-react";
 import Modal from "@/components/items/Modal";
 import SwipeToConfirm from "@/components/ui/swiper";
@@ -36,7 +36,11 @@ interface InteractiveMapProps {
   onMapClick: (lat: number, lng: number) => void;
 }
 
-function InteractiveMap({ markerPosition, userLocation, onMapClick }: InteractiveMapProps) {
+function InteractiveMap({
+  markerPosition,
+  userLocation,
+  onMapClick,
+}: InteractiveMapProps) {
   // Map center - same as buy page (LMU campus area)
   const center = { lat: 33.966787, lng: -118.417631 };
   const [zoom] = useState(19);

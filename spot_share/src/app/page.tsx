@@ -3,12 +3,10 @@
 import React, { useState, useCallback } from "react";
 import { MapPin, DollarSign } from "lucide-react";
 import Link from "next/link";
-import {
-  GoogleMap,
-  Marker,
-  OverlayView,
-} from "@react-google-maps/api";
+import { GoogleMap, Marker, OverlayView } from "@react-google-maps/api";
 import { useLocation } from "@/components/contexts/LocationContext";
+import { useAuthentication } from "../../authService";
+import { useAuth } from "@/components/contexts/AuthContext";
 
 // Map Section Component with Interactive Marking
 const MapSection = () => {
@@ -118,14 +116,9 @@ const MapSection = () => {
 
         {/* Render all clicked markers */}
         {markers.map((marker, index) => (
-          <Marker
-            key={index}
-            position={{ lat: marker.lat, lng: marker.lng }}
-          />
+          <Marker key={index} position={{ lat: marker.lat, lng: marker.lng }} />
         ))}
       </GoogleMap>
-
-      
 
       {/* Center content overlay */}
     </div>
@@ -133,31 +126,38 @@ const MapSection = () => {
 };
 
 // Footer Actions Component
-const FooterActions = () => {
+function FooterActions() {
+  const user = useAuthentication();
   return (
-    <div className="fixed bottom-0 left-0 right-0 pointer-events-none z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
-        <div className="flex justify-between items-end">
-          {/* Buy Button */}
-          <Link href="/buy/choose-spot">
-            <button className="pointer-events-auto group relative bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
-              <DollarSign className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
-              <span className="text-lg font-bold">Buy a Spot</span>
-            </button>
-          </Link>
+    <>
+      {!user ? (
+        <></>
+      ) : (
+        <div className="fixed bottom-0 left-0 right-0 pointer-events-none z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+            <div className="flex justify-between items-end">
+              {/* Buy Button */}
+              <Link href="/buy/choose-spot">
+                <button className="pointer-events-auto group relative bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
+                  <DollarSign className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+                  <span className="text-lg font-bold">Buy a Spot</span>
+                </button>
+              </Link>
 
-          {/* Sell Button */}
-          <Link href="/sell/choose-spot">
-            <button className="pointer-events-auto group relative bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-purple-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
-              <span className="text-lg font-bold">Sell a Spot</span>
-              <MapPin className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
-            </button>
-          </Link>
+              {/* Sell Button */}
+              <Link href="/sell/choose-spot">
+                <button className="pointer-events-auto group relative bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-purple-500/50 hover:scale-105 transition-all duration-300 flex items-center space-x-3">
+                  <span className="text-lg font-bold">Sell a Spot</span>
+                  <MapPin className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+                </button>
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
-};
+}
 
 // Main Page Component
 export default function Home() {
