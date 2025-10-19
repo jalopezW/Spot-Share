@@ -332,22 +332,63 @@ export default function EtaPage() {
       const blackPulseOverlay = new BlackPulseOverlay(new window.google.maps.LatLng(blackMarkerLocation.lat, blackMarkerLocation.lng));
       blackPulseOverlay.setMap(map);
 
-      // Draw route line
-      const routePath = new window.google.maps.Polyline({
-        path: [buyerLocation, parkingLot],
-        geodesic: true,
-        strokeColor: "#3B82F6",
-        strokeOpacity: 0.8,
-        strokeWeight: 4,
+      // Use Google Maps Directions API for actual route
+      const directionsService = new window.google.maps.DirectionsService();
+      const directionsRenderer = new window.google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: true, // We already have custom markers
+        polylineOptions: {
+          strokeColor: "#3B82F6",
+          strokeOpacity: 0.8,
+          strokeWeight: 4,
+        },
       });
 
-      routePath.setMap(map);
-
-      // Fit bounds to show both markers
-      const bounds = new window.google.maps.LatLngBounds();
-      bounds.extend(parkingLot);
-      bounds.extend(buyerLocation);
-      map.fitBounds(bounds);
+      // Request directions from buyer location to parking spot
+      directionsService.route(
+        {
+          origin: new window.google.maps.LatLng(buyerLocation.lat, buyerLocation.lng),
+          destination: new window.google.maps.LatLng(parkingLot.lat, parkingLot.lng),
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result: any, status: any) => {
+          if (status === window.google.maps.DirectionsStatus.OK && result) {
+            directionsRenderer.setDirections(result);
+            
+            // Get route distance and duration from directions result
+            if (result.routes[0]?.legs[0]) {
+              const leg = result.routes[0].legs[0];
+              const distanceInMiles = leg.distance.value / 1609.34; // Convert meters to miles
+              setDistance(distanceInMiles);
+              
+              // Optional: You could also set ETA based on duration
+              // const durationMinutes = Math.ceil(leg.duration.value / 60);
+              
+              console.log("Route calculated:", {
+                distance: leg.distance.text,
+                duration: leg.duration.text
+              });
+            }
+          } else {
+            console.error("Directions request failed:", status);
+            // Fallback to simple line if directions fail
+            const routePath = new window.google.maps.Polyline({
+              path: [buyerLocation, parkingLot],
+              geodesic: true,
+              strokeColor: "#3B82F6",
+              strokeOpacity: 0.8,
+              strokeWeight: 4,
+            });
+            routePath.setMap(map);
+            
+            // Fit bounds manually as fallback
+            const bounds = new window.google.maps.LatLngBounds();
+            bounds.extend(parkingLot);
+            bounds.extend(buyerLocation);
+            map.fitBounds(bounds);
+          }
+        }
+      );
 
       console.log("Map initialized successfully");
     } catch (error) {
