@@ -1,9 +1,32 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { MapPin, DollarSign } from "lucide-react";
 import Link from "next/link";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, LoadScript, Marker, OverlayView } from "@react-google-maps/api";
+
+/**
+ * HELPER FUNCTION: GET USER LOCATION
+ */
+const getUserLocation = (): Promise<{ lat: number; lng: number }> => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation is not supported by your browser'));
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          reject(error);
+        }
+      );
+    }
+  });
+};
 
 // Map Section Component with Interactive Marking
 const MapSection = () => {
@@ -16,6 +39,9 @@ const MapSection = () => {
   // Map zoom level (1-20, higher = more zoomed in)
   const [zoom] = useState(17);
 
+  // Store user's current location
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
   // Store marked locations
   const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
 
@@ -24,6 +50,21 @@ const MapSection = () => {
     lat: number;
     lng: number;
   } | null>(null);
+
+  // Fetch user location when component mounts
+  useEffect(() => {
+    const fetchUserLocation = async () => {
+      try {
+        const location = await getUserLocation();
+        setUserLocation(location);
+        console.log("User location:", location);
+      } catch (error) {
+        console.error("Error getting user location:", error);
+      }
+    };
+
+    fetchUserLocation();
+  }, []);
 
   // Map container styling
   const mapContainerStyle = {
@@ -74,7 +115,46 @@ const MapSection = () => {
           options={mapOptions}
           onClick={onMapClick}
         >
-          {/* Render all markers */}
+          {/* User location marker - Blue */}
+          {userLocation && (
+            <>
+              {/* Pulse overlay on user location */}
+              <OverlayView
+                position={userLocation}
+                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+              >
+                <div style={{
+                  position: 'absolute',
+                  transform: 'translate(-50%, -50%)',
+                  pointerEvents: 'none',
+                }}>
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    background: '#0C76F2',
+                    borderRadius: '50%',
+                    position: 'relative',
+                  }}>
+                    <div 
+                      className="pulse-ring"
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        position: 'absolute',
+                        top: '0',
+                        left: '0',
+                        borderRadius: '50%',
+                        background: '#59A3FF',
+                        opacity: 0.6,
+                      }} 
+                    />
+                  </div>
+                </div>
+              </OverlayView>
+            </>
+          )}
+
+          {/* Render all clicked markers */}
           {markers.map((marker, index) => (
             <Marker
               key={index}
