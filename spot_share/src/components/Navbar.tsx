@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   login,
   logout,
@@ -225,20 +225,19 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <LabeledInput
+              <LabeledDropdown
                 label="Make"
-                value={make}
                 onChange={setMake}
-                placeholder="Toyota"
                 icon={<Car className="h-4 w-4" />}
+                dropdownOptions={Object.keys(carBrands)}
                 required
               />
-              <LabeledInput
-                label="Model"
-                value={model}
+              <LabeledDropdown
+                label="Make"
                 onChange={setModel}
-                placeholder="Camry"
                 icon={<Car className="h-4 w-4" />}
+                dropdownOptions={carBrands[make]}
+                disabled={make == ""}
                 required
               />
               <LabeledInput
@@ -255,7 +254,7 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
                 onChange={setPlate}
                 placeholder="8ABC123"
                 icon={<BadgeCheck className="h-4 w-4" />}
-                helper="We’ll only show the last 3 characters to other users."
+                // helper="We’ll only show the last 3 characters to other users."
                 required
               />
             </div>
@@ -335,147 +334,172 @@ function LabeledInput({
     </div>
   );
 }
+function LabeledDropdown({
+  label,
+  onChange,
+  dropdownOptions,
+  required,
+  icon,
+  disabled,
+}: {
+  label: string;
+  onChange: (v: string) => void;
+  dropdownOptions: string[];
+  required?: boolean;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+}) {
+  const id = React.useId();
+  const [inputValue, setInputValue] = useState("");
+  const [selectedOption, setSelectedOption] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [filteredOptions, setFilteredOptions] = useState<string[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-// export default function CarBrandDropdown({
-//   changeMake,
-//   changeModel,
-// }: {
-//   changeMake: any;
-//   changeModel: any;
-// }) {
-//   const [selectedBrand, setSelectedBrand] = useState<string>("");
-//   const [selectedModel, setSelectedModel] = useState<string>("");
+  // Filter options based on input
+  useEffect(() => {
+    if (inputValue.length > 0 && dropdownOptions) {
+      const filtered = dropdownOptions.filter((option) =>
+        option.toLowerCase().includes(inputValue.toLowerCase())
+      );
+      setFilteredOptions(filtered);
+    } else {
+      setFilteredOptions(dropdownOptions);
+    }
+  }, [inputValue, dropdownOptions]);
 
-//   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-//     setSelectedBrand(e.target.value);
-//     setSelectedModel(""); // Reset model when brand changes
-//     changeMake(e.target.value);
-//   };
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
 
-//   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-//     setSelectedModel(e.target.value);
-//     changeModel(e.target.value);
-//   };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
-//   const handleSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     console.log("Selected:", { brand: selectedBrand, model: selectedModel });
-//     // Add your submit logic here
-//   };
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setInputValue(value);
+    setSelectedOption("");
+    onChange(value);
+    setIsOpen(true); // Open dropdown when typing
+  };
 
-//   return (
-//     <div style={{ maxWidth: "500px", margin: "50px auto", padding: "20px" }}>
-//       <h2>Select Your Vehicle</h2>
+  const handleInputClick = () => {
+    setIsOpen(!isOpen); // Toggle dropdown on input click
+  };
 
-//       <form onSubmit={handleSubmit}>
-//         {/* Brand Dropdown */}
-//         <div style={{ marginBottom: "20px" }}>
-//           <label
-//             htmlFor="brand"
-//             style={{
-//               display: "block",
-//               marginBottom: "8px",
-//               fontWeight: "bold",
-//             }}
-//           >
-//             Brand
-//           </label>
-//           <select
-//             id="brand"
-//             value={selectedBrand}
-//             onChange={handleBrandChange}
-//             required
-//             style={{
-//               width: "100%",
-//               padding: "10px",
-//               fontSize: "16px",
-//               borderRadius: "4px",
-//               border: "1px solid #ccc",
-//             }}
-//           >
-//             <option value="">Select a brand...</option>
-//             {Object.keys(carBrands)
-//               .sort()
-//               .map((brand) => (
-//                 <option key={brand} value={brand}>
-//                   {brand}
-//                 </option>
-//               ))}
-//           </select>
-//         </div>
+  const handleOptionClick = (option: string) => {
+    setInputValue(option);
+    setSelectedOption(option);
+    onChange(option);
+    setIsOpen(false); // Close dropdown after selection
+  };
 
-//         {/* Model Dropdown - Only shows when brand is selected */}
-//         {selectedBrand && (
-//           <div style={{ marginBottom: "20px" }}>
-//             <label
-//               htmlFor="model"
-//               style={{
-//                 display: "block",
-//                 marginBottom: "8px",
-//                 fontWeight: "bold",
-//               }}
-//             >
-//               Model
-//             </label>
-//             <select
-//               id="model"
-//               value={selectedModel}
-//               onChange={handleModelChange}
-//               required
-//               style={{
-//                 width: "100%",
-//                 padding: "10px",
-//                 fontSize: "16px",
-//                 borderRadius: "4px",
-//                 border: "1px solid #ccc",
-//               }}
-//             >
-//               <option value="">Select a model...</option>
-//               {carBrands[selectedBrand].map((model) => (
-//                 <option key={model} value={model}>
-//                   {model}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-//         )}
+  useEffect(() => {
+    if (disabled) {
+      setInputValue("");
+      setSelectedOption("");
+      setIsOpen(false);
+    }
+  }, [disabled]);
 
-//         {/* Display Selection */}
-//         {selectedBrand && selectedModel && (
-//           <div
-//             style={{
-//               padding: "15px",
-//               backgroundColor: "#f0f0f0",
-//               borderRadius: "4px",
-//               marginBottom: "20px",
-//             }}
-//           >
-//             <p style={{ margin: 0 }}>
-//               <strong>Selected Vehicle:</strong> {selectedBrand} {selectedModel}
-//             </p>
-//           </div>
-//         )}
+  return (
+    <div ref={dropdownRef} className="relative">
+      <label
+        htmlFor={id}
+        className="block text-sm font-medium text-slate-700 mb-1"
+      >
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
 
-//         {/* Submit Button */}
-//         <button
-//           type="submit"
-//           disabled={!selectedBrand || !selectedModel}
-//           style={{
-//             width: "100%",
-//             padding: "12px",
-//             fontSize: "16px",
-//             fontWeight: "bold",
-//             backgroundColor:
-//               selectedBrand && selectedModel ? "#007bff" : "#ccc",
-//             color: "white",
-//             border: "none",
-//             borderRadius: "4px",
-//             cursor: selectedBrand && selectedModel ? "pointer" : "not-allowed",
-//           }}
-//         >
-//           Submit
-//         </button>
-//       </form>
-//     </div>
-//   );
-// }
+      <div className="relative">
+        {icon && (
+          <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            {icon}
+          </div>
+        )}
+
+        <input
+          id={id}
+          disabled={disabled}
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onClick={handleInputClick}
+          placeholder="Type to search..."
+          required={required}
+          className={`w-full rounded-lg border border-slate-300 px-4 py-2 pr-10 text-sm 
+            focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
+            ${icon ? "pl-10" : ""}`}
+        />
+
+        {/* Dropdown arrow indicator */}
+        <span
+          onClick={handleInputClick}
+          className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer select-none text-slate-400 transition-transform duration-200"
+          style={{
+            transform: `translateY(-50%) rotate(${isOpen ? "180deg" : "0deg"})`,
+          }}
+        >
+          ▼
+        </span>
+      </div>
+
+      {/* Dropdown menu with expand/contract animation */}
+      {isOpen && filteredOptions.length > 0 && (
+        <ul
+          className="absolute z-50 mt-1 w-full overflow-y-auto rounded-lg border border-slate-300 
+            bg-white shadow-lg animate-slideDown"
+          style={{
+            maxHeight: "200px",
+            listStyleType: "none",
+            padding: 0,
+            margin: 0,
+          }}
+        >
+          {filteredOptions.map((option, index) => (
+            <li
+              key={index}
+              onClick={() => handleOptionClick(option)}
+              className={`cursor-pointer px-4 py-2 text-sm transition-colors hover:bg-slate-100
+                ${selectedOption === option ? "bg-slate-200" : ""}`}
+            >
+              {option}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {selectedOption && (
+        <p className="mt-2 text-sm text-slate-600">
+          <strong>Selected:</strong> {selectedOption}
+        </p>
+      )}
+
+      <style>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slideDown {
+          animation: slideDown 0.2s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+}
