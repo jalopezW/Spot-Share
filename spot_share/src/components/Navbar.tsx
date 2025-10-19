@@ -22,6 +22,7 @@ import {
   User,
 } from "lucide-react";
 import { carBrands } from "../../carBrands";
+import { useAuth } from "./contexts/AuthContext";
 
 /* -----------------------------
    Navbar
@@ -40,6 +41,28 @@ export function Navbar() {
       if (!docSnap.exists()) setOpenSignUp(true);
     }
   }
+
+  async function handleSignUp() {
+    const userID = loggedInUserID();
+    if (userID) {
+      const docRef = doc(db, "users", userID);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        logout();
+      }
+    }
+    setOpenSignUp(false);
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await handleSignUp();
+      } catch (err) {}
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur">
@@ -108,7 +131,7 @@ export function Navbar() {
         </div>
       </div>
 
-      <SignUpModal open={openSignUp} onClose={() => setOpenSignUp(false)} />
+      <SignUpModal open={openSignUp} onClose={() => handleSignUp()} />
     </nav>
   );
 }
@@ -173,7 +196,7 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
       }}
       title=""
     >
-      <div className="space-y-6 p-1 sm:p-2">
+      <div className="max-h-[90vh] overflow-y-auto space-y-6 p-1 sm:p-2">
         {/* Header */}
         <div className="space-y-1 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -200,7 +223,7 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
                 label="First name"
                 value={first_name}
                 onChange={setfirstName}
-                placeholder="Sebastian"
+                placeholder="Josh"
                 autoComplete="given-name"
                 icon={<User className="h-4 w-4" />}
                 required
@@ -209,7 +232,7 @@ const SignUpModal: React.FC<ModalProps> = ({ open, onClose }) => {
                 label="Last name"
                 value={last_name}
                 onChange={setlastName}
-                placeholder="Rocha"
+                placeholder="Miller"
                 autoComplete="family-name"
                 icon={<User className="h-4 w-4" />}
                 required
