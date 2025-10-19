@@ -635,11 +635,11 @@ export default function ChooseSpotPage() {
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                       <span className="text-gray-700 font-semibold">
-                        {spot.userInfo.rating.reduce(
+                        {/* {spot.userInfo.rating.reduce(
                           (accumulator: number, currentValue: number) =>
                             accumulator + currentValue,
                           0
-                        )}
+                        )} */}
                       </span>
                     </div>
                   </div>
