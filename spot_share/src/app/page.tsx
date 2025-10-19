@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { MapPin, DollarSign } from "lucide-react";
 import Link from "next/link";
-import { GoogleMap, LoadScript, Marker, OverlayView } from "@react-google-maps/api";
+import { GoogleMap, Marker, OverlayView } from "@react-google-maps/api";
 import { getUserLocation } from "@/utils/location";
 
 // Map Section Component with Interactive Marking
@@ -82,65 +82,59 @@ const MapSection = () => {
   return (
     <div className="h-screen relative">
       {/* Interactive Google Map */}
-      <LoadScript 
-        googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-        id="google-maps-script"
-        preventGoogleFontsLoading
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={center}
+        options={mapOptions}
+        onClick={onMapClick}
       >
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={center}
-          options={mapOptions}
-          onClick={onMapClick}
-        >
-          {/* User location marker - Blue */}
-          {userLocation && (
-            <>
-              {/* Pulse overlay on user location */}
-              <OverlayView
-                position={userLocation}
-                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-              >
+        {/* User location marker - Blue */}
+        {userLocation && (
+          <>
+            {/* Pulse overlay on user location */}
+            <OverlayView
+              position={userLocation}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div style={{
+                position: 'absolute',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+              }}>
                 <div style={{
-                  position: 'absolute',
-                  transform: 'translate(-50%, -50%)',
-                  pointerEvents: 'none',
+                  width: '20px',
+                  height: '20px',
+                  background: '#0C76F2',
+                  borderRadius: '50%',
+                  position: 'relative',
                 }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    background: '#0C76F2',
-                    borderRadius: '50%',
-                    position: 'relative',
-                  }}>
-                    <div 
-                      className="pulse-ring"
-                      style={{
-                        width: '20px',
-                        height: '20px',
-                        position: 'absolute',
-                        top: '0',
-                        left: '0',
-                        borderRadius: '50%',
-                        background: '#59A3FF',
-                        opacity: 0.6,
-                      }} 
-                    />
-                  </div>
+                  <div 
+                    className="pulse-ring"
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      borderRadius: '50%',
+                      background: '#59A3FF',
+                      opacity: 0.6,
+                    }} 
+                  />
                 </div>
-              </OverlayView>
-            </>
-          )}
+              </div>
+            </OverlayView>
+          </>
+        )}
 
-          {/* Render all clicked markers */}
-          {markers.map((marker, index) => (
-            <Marker
-              key={index}
-              position={{ lat: marker.lat, lng: marker.lng }}
-            />
-          ))}
-        </GoogleMap>
-      </LoadScript>
+        {/* Render all clicked markers */}
+        {markers.map((marker, index) => (
+          <Marker
+            key={index}
+            position={{ lat: marker.lat, lng: marker.lng }}
+          />
+        ))}
+      </GoogleMap>
 
       {/* Dark overlay for better text contrast */}
       <div className="absolute inset-0 bg-black/20 pointer-events-none" />

@@ -4,7 +4,7 @@ import { MapPin, Edit3, Check } from "lucide-react";
 import Modal from "@/components/items/Modal";
 import SwipeToConfirm from "@/components/ui/swiper";
 import { toast } from "sonner";
-import { GoogleMap, LoadScript, Marker, OverlayView } from "@react-google-maps/api";
+import { GoogleMap, Marker, OverlayView } from "@react-google-maps/api";
 import {
   getColor,
   getMake,
@@ -90,61 +90,59 @@ function InteractiveMap({ markerPosition, onMapClick }: InteractiveMapProps) {
 
 
   return (
-    <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
-      <GoogleMap
-        mapContainerStyle={mapContainerStyle}
-        center={center}
-        options={mapOptions}
-        onClick={handleMapClick}
-      >
-        {/* User location marker - ygy=[[Blue */}
-        {userLocation && (
-            <>
-              {/* Pulse overlay on user location */}
-              <OverlayView
-                position={userLocation}
-                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-              >
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      center={center}
+      options={mapOptions}
+      onClick={handleMapClick}
+    >
+      {/* User location marker - Blue */}
+      {userLocation && (
+          <>
+            {/* Pulse overlay on user location */}
+            <OverlayView
+              position={userLocation}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div style={{
+                position: 'absolute',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+              }}>
                 <div style={{
-                  position: 'absolute',
-                  transform: 'translate(-50%, -50%)',
-                  pointerEvents: 'none',
+                  width: '20px',
+                  height: '20px',
+                  background: '#0C76F2',
+                  borderRadius: '50%',
+                  position: 'relative',
                 }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    background: '#0C76F2',
-                    borderRadius: '50%',
-                    position: 'relative',
-                  }}>
-                    <div 
-                      className="pulse-ring"
-                      style={{
-                        width: '20px',
-                        height: '20px',
-                        position: 'absolute',
-                        top: '0',
-                        left: '0',
-                        borderRadius: '50%',
-                        background: '#59A3FF',
-                        opacity: 0.6,
-                      }} 
-                    />
-                  </div>
+                  <div 
+                    className="pulse-ring"
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      borderRadius: '50%',
+                      background: '#59A3FF',
+                      opacity: 0.6,
+                    }} 
+                  />
                 </div>
-              </OverlayView>
-            </>
-          )}
-
-        {/* Show marker at selected position */}
-        {markerPosition && (
-          <Marker
-            position={markerPosition}
-            animation={google.maps.Animation.DROP}
-          />
+              </div>
+            </OverlayView>
+          </>
         )}
-      </GoogleMap>
-    </LoadScript>
+
+      {/* Show marker at selected position */}
+      {markerPosition && (
+        <Marker
+          position={markerPosition}
+          animation={google.maps.Animation.DROP}
+        />
+      )}
+    </GoogleMap>
   );
 }
 

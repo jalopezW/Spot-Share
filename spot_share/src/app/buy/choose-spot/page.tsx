@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { MapPin, DollarSign, Star, Navigation, X, Clock, ArrowLeft, CreditCard } from "lucide-react";
-import { GoogleMap, LoadScript, Marker, OverlayView } from "@react-google-maps/api";
+import { GoogleMap, Marker, OverlayView } from "@react-google-maps/api";
 
 /**
  * PARKING SPOTS DATA
@@ -422,16 +422,11 @@ function InteractiveGoogleMap() {
   };
 
   return (
-    <LoadScript 
-      googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-      id="google-maps-script"
-      preventGoogleFontsLoading
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      center={{ lat: 33.966787, lng: -118.417631 }}
+      options={mapOptions}
     >
-      <GoogleMap
-        mapContainerStyle={mapContainerStyle}
-        center={{ lat: 33.966787, lng: -118.417631 }}
-        options={mapOptions}
-      >
         {/* Dynamically render markers for all parking spots from data */}
         {parkingSpots.map((spot) => (
           <React.Fragment key={spot.id}>
@@ -466,7 +461,6 @@ function InteractiveGoogleMap() {
           </React.Fragment>
         ))}
       </GoogleMap>
-    </LoadScript>
   );
 }
 
