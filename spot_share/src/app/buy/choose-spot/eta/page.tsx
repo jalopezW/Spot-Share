@@ -201,7 +201,7 @@ export default function SellerEtaPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Car className="w-6 h-6 text-blue-600" />
-                Parking Spot Information
+                Parking Spot Information 
               </h3>
 
               <div className="space-y-4">
@@ -287,15 +287,8 @@ export default function SellerEtaPage() {
               className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2 text-lg"
             >
               <MapPin className="w-6 h-6" />
-              Buyer Arrived
+              Arrived
             </button>
-
-            {/* Status Note */}
-            <div className="bg-gray-100 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-600">
-                Click "Buyer Arrived" once the buyer reaches your parking spot
-              </p>
-            </div>
           </div>
         </div>
       </div>
